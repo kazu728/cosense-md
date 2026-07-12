@@ -36,6 +36,43 @@
         tab-size: 2;
       }
       #input:focus { outline: none; }
+      .preview-pane { display: flex; flex-direction: column; overflow: hidden; }
+      .tabs { display: flex; align-items: stretch; border-bottom: 1px solid var(--border); }
+      .tab {
+        padding: 0.4rem 0.9rem;
+        border: 0;
+        background: none;
+        font: inherit;
+        color: inherit;
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+      }
+      .tab[aria-selected="true"] { border-bottom-color: currentColor; font-weight: 600; }
+      #copy {
+        margin-left: auto;
+        align-self: center;
+        margin-right: 0.5rem;
+        padding: 0.2rem 0.7rem;
+        font: inherit;
+        cursor: pointer;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: none;
+        color: inherit;
+      }
+      .tab-body { flex: 1; min-height: 0; }
+      #preview { height: 100%; overflow: auto; }
+      #markdown {
+        width: 100%;
+        height: 100%;
+        border: 0;
+        padding: 1rem;
+        resize: none;
+        background: var(--bg-raw);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 13px;
+      }
+      #markdown:focus { outline: none; }
       .preview { padding: 1rem; }
       .preview :first-child { margin-top: 0; }
       .preview pre {
@@ -76,8 +113,16 @@ table:Data
  Bob	87
 </textarea>
       </div>
-      <div class="pane">
-        <div id="preview" class="preview"></div>
+      <div class="pane preview-pane">
+        <div class="tabs" role="tablist">
+          <button id="tab-preview" class="tab" role="tab" aria-selected="true" aria-controls="preview">プレビュー</button>
+          <button id="tab-markdown" class="tab" role="tab" aria-selected="false" aria-controls="markdown">Markdown</button>
+          <button id="copy" type="button" hidden>コピー</button>
+        </div>
+        <div class="tab-body">
+          <div id="preview" class="preview" role="tabpanel"></div>
+          <textarea id="markdown" role="tabpanel" readonly spellcheck="false" aria-label="変換後 Markdown" hidden></textarea>
+        </div>
       </div>
     </main>
     <script type="module" src="./main.js"></script>

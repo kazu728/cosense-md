@@ -12,11 +12,33 @@ const md = new MarkdownIt({ html: false, linkify: true });
 
 const input = document.getElementById("input");
 const preview = document.getElementById("preview");
+const markdown = document.getElementById("markdown");
+const copy = document.getElementById("copy");
+const tabPreview = document.getElementById("tab-preview");
+const tabMarkdown = document.getElementById("tab-markdown");
 
 function render() {
-  preview.innerHTML = DOMPurify.sanitize(md.render(convert(input.value)));
+  const src = convert(input.value);
+  preview.innerHTML = DOMPurify.sanitize(md.render(src));
+  markdown.value = src;
+}
+
+function selectTab(isMarkdown) {
+  tabMarkdown.setAttribute("aria-selected", String(isMarkdown));
+  tabPreview.setAttribute("aria-selected", String(!isMarkdown));
+  markdown.hidden = !isMarkdown;
+  preview.hidden = isMarkdown;
+  copy.hidden = !isMarkdown;
 }
 
 await init();
 input.addEventListener("input", render);
+tabPreview.addEventListener("click", () => selectTab(false));
+tabMarkdown.addEventListener("click", () => selectTab(true));
+copy.addEventListener("click", async () => {
+  await navigator.clipboard.writeText(markdown.value);
+  const prev = copy.textContent;
+  copy.textContent = "コピーしました";
+  setTimeout(() => { copy.textContent = prev; }, 1200);
+});
 render();
