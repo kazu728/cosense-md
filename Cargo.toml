@@ -1,0 +1,16 @@
+[workspace]
+resolver = "2"
+members = ["crates/cosense-core", "crates/cosense-wasm", "markitdown-cosense"]
+# Only the core is in the default host build/test set. The binding crates are
+# built by their own toolchains — cosense-py by maturin (which supplies the
+# Python link args) and cosense-wasm for the wasm32 target — so `cargo build`
+# and `cargo test` never try to link a Python or wasm cdylib on the host.
+default-members = ["crates/cosense-core"]
+
+# Version and shared metadata live here once; every crate inherits them with
+# `<field>.workspace = true`, so a release bumps a single line.
+[workspace.package]
+version = "0.3.0"
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/kazu728/markitdown-cosense"

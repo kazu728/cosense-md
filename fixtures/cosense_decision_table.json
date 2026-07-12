@@ -1,0 +1,313 @@
+{
+  "inline": [
+    {
+      "id": "tag_annotation",
+      "source": ["[tag]"],
+      "expected": ["#tag"]
+    },
+    {
+      "id": "page_name_tag",
+      "source": ["[SomePage]"],
+      "expected": ["#SomePage"]
+    },
+    {
+      "id": "inline_image_tagged",
+      "source": ["[img https://example.com/image.jpg]"],
+      "expected": ["![img](https://example.com/image.jpg)"]
+    },
+    {
+      "id": "inline_image_auto",
+      "source": ["[https://example.com/image.png]"],
+      "expected": ["![](https://example.com/image.png)"]
+    },
+    {
+      "id": "labeled_link_forward",
+      "source": ["[Label https://example.com]"],
+      "expected": ["[Label](https://example.com)"]
+    },
+    {
+      "id": "labeled_link_reverse",
+      "source": ["[https://example.com Label]"],
+      "expected": ["[Label](https://example.com)"]
+    },
+    {
+      "id": "bare_url_autolink",
+      "source": ["Plain https://example.com text"],
+      "expected": ["Plain <https://example.com> text"]
+    },
+    {
+      "id": "bracket_bare_url_autolink",
+      "source": ["[https://example.com]"],
+      "expected": ["<https://example.com>"]
+    },
+    {
+      "id": "preformatted_autolink",
+      "source": ["<https://example.com>"],
+      "expected": ["<https://example.com>"]
+    },
+    {
+      "id": "inline_markup_variants",
+      "source": ["[/ italic] and [- strike]"],
+      "expected": ["*italic* and ~~strike~~"]
+    },
+    {
+      "id": "bold_italic",
+      "source": ["[*/ strong italic]"],
+      "expected": ["***strong italic***"]
+    },
+    {
+      "id": "bold_strike",
+      "source": ["[*- bold strike]"],
+      "expected": ["**~~bold strike~~**"]
+    },
+    {
+      "id": "italic_strike",
+      "source": ["[/- italic strike]"],
+      "expected": ["*~~italic strike~~*"]
+    },
+    {
+      "id": "double_bracket_bold",
+      "source": ["[[strong]]"],
+      "expected": ["**strong**"]
+    },
+    {
+      "id": "youtube_link",
+      "source": ["[YouTube https://youtu.be/dQw4w9WgXcQ]"],
+      "expected": ["[YouTube Video](https://youtu.be/dQw4w9WgXcQ)"]
+    },
+    {
+      "id": "twitter_link",
+      "source": ["[Twitter https://twitter.com/jack/status/20]"],
+      "expected": ["[Twitter Post](https://twitter.com/jack/status/20)"]
+    }
+  ],
+  "tag_links": [
+    {
+      "id": "hyphen_page_link_passthrough",
+      "source": ["[foo-bar]"],
+      "expected": ["[foo-bar]"]
+    },
+    {
+      "id": "slash_page_link_passthrough",
+      "source": ["[foo/bar]"],
+      "expected": ["[foo/bar]"]
+    },
+    {
+      "id": "external_project_link_passthrough",
+      "source": ["[/project/page]"],
+      "expected": ["[/project/page]"]
+    },
+    {
+      "id": "icon_passthrough",
+      "source": ["[user.icon]"],
+      "expected": ["[user.icon]"]
+    },
+    {
+      "id": "hashtag_passthrough",
+      "source": ["#hashtag"],
+      "expected": ["#hashtag"]
+    },
+    {
+      "id": "inline_math_passthrough",
+      "source": ["[$ E = mc^2 $]"],
+      "expected": ["[$ E = mc^2 $]"]
+    },
+    {
+      "id": "existing_markdown_link_not_broken",
+      "source": ["See [Label](https://example.com) here"],
+      "expected": ["See [Label](https://example.com) here"]
+    },
+    {
+      "id": "inline_star_decoration_passthrough",
+      "source": ["text [* bold] mid"],
+      "expected": ["text [* bold] mid"]
+    }
+  ],
+  "headings_and_paragraphs": [
+    {
+      "id": "heading_levels",
+      "source": ["[* Title]", "[** Subtitle]", "[*** Section]", "[**** Subsection]", "[***** Mini]"],
+      "expected": ["# Title", "## Subtitle", "### Section", "#### Subsection", "##### Mini"]
+    },
+    {
+      "id": "heading_trailing_text",
+      "source": ["[* Heading] trailing text"],
+      "expected": ["# Heading trailing text"]
+    },
+    {
+      "id": "paragraph_preserves_text",
+      "source": ["Multi-line", "paragraph with [tag] and [/ emphasis]"],
+      "expected": ["Multi-line", "paragraph with #tag and *emphasis*"]
+    }
+  ],
+  "code_and_math": [
+    {
+      "id": "code_directive_language_inference",
+      "source": ["code:example.py", " print('hello')"],
+      "expected": ["```py", "print('hello')", "```"]
+    },
+    {
+      "id": "code_block_stops_at_unindented_line",
+      "source": ["code:py", " print(1)", "outside paragraph"],
+      "expected": ["```py", "print(1)", "```", "outside paragraph"]
+    },
+    {
+      "id": "fenced_code_preserved",
+      "source": ["```python", "print('[tag] inside code')", "```", "[tag]"],
+      "expected": ["```python", "print('[tag] inside code')", "```", "#tag"]
+    },
+    {
+      "id": "fenced_code_unclosed_at_eof",
+      "source": ["```python", "print(1)"],
+      "expected": ["```python", "print(1)", "```"]
+    },
+    {
+      "id": "math_block_dollar_block",
+      "source": ["code:tex", " E = mc^2", " V(X) = \\sigma^2"],
+      "expected": ["$$", "E = mc^2", "V(X) = \\sigma^2", "$$"]
+    },
+    {
+      "id": "math_block_non_math_preserved_verbatim",
+      "source": ["code:tex", " see the notes - chapter 2"],
+      "expected": ["$$", "see the notes - chapter 2", "$$"]
+    },
+    {
+      "id": "code_block_keeps_internal_blank_line",
+      "source": ["code:py", " line 1", "", " line 2", "after"],
+      "expected": ["```py", "line 1", "", "line 2", "```", "after"]
+    },
+    {
+      "id": "code_block_ends_on_blank_then_unindented",
+      "source": ["code:py", " line 1", "", "outside"],
+      "expected": ["```py", "line 1", "```", "", "outside"]
+    }
+  ],
+  "lists_and_tables": [
+    {
+      "id": "nested_lists",
+      "source": [" Item 1", "  Sub-item 1.1", "   Sub-sub-item", "  Sub-item 1.2", " Item 2"],
+      "expected": ["- Item 1", "  - Sub-item 1.1", "    - Sub-sub-item", "  - Sub-item 1.2", "- Item 2"]
+    },
+    {
+      "id": "table_rendering",
+      "source": ["table:Users", " Name\tAge\tCity", " Alice\t30\tTokyo", " Bob\t25\tOsaka"],
+      "expected": ["## Users", "", "| Name | Age | City |", "|---|---|---|", "| Alice | 30 | Tokyo |", "| Bob | 25 | Osaka |"]
+    },
+    {
+      "id": "table_without_title",
+      "source": ["table:", " A\tB", " 1\t2"],
+      "expected": ["| A | B |", "|---|---|", "| 1 | 2 |"]
+    },
+    {
+      "id": "table_multiword_cell_preserved",
+      "source": ["table:People", " Full Name\tAge", " Alice Smith\t20"],
+      "expected": ["## People", "", "| Full Name | Age |", "|---|---|", "| Alice Smith | 20 |"]
+    },
+    {
+      "id": "table_ragged_row_not_truncated",
+      "source": ["table:T", " A\tB", " x\ty\tz"],
+      "expected": ["## T", "", "| A | B |  |", "|---|---|---|", "| x | y | z |"]
+    }
+  ],
+  "line_boundaries": [
+    {
+      "id": "decoration_bracket_does_not_cross_newline",
+      "source": ["x [/ a", "b] y"],
+      "expected": ["x [/ a", "b] y"]
+    },
+    {
+      "id": "link_bracket_does_not_fuse_across_newline",
+      "source": ["[Label", "https://example.com]"],
+      "expected": ["[Label", "<https://example.com>]"]
+    }
+  ],
+  "indentation": [
+    {
+      "id": "fullwidth_space_indent_list",
+      "source": ["　Item", "　　Sub"],
+      "expected": ["- Item", "  - Sub"]
+    },
+    {
+      "id": "tab_indent_list",
+      "source": ["\tItem", "\t\tSub"],
+      "expected": ["- Item", "  - Sub"]
+    }
+  ],
+  "integration": [
+    {
+      "id": "full_document",
+      "source": [
+        "[* Main Heading]",
+        "[** Sub Heading]",
+        "[/ italic] and [- strikethrough]",
+        "[*/ bold italic] and [*- bold strikethrough]",
+        "",
+        "Links and Images:",
+        "[Google https://google.com]",
+        "[https://example.com/image.png]",
+        "[img https://example.com/logo.png]",
+        "",
+        "Lists:",
+        " Item 1",
+        "  Nested 1-1",
+        "   Deep nested",
+        " Item 2",
+        "",
+        "Code:",
+        "code:python",
+        " def hello():",
+        "     print(\"world\")",
+        "",
+        "Math:",
+        "[$ E = mc^2 $]",
+        "",
+        "code:tex",
+        " V(X) = E[(X-\\mu)^2]",
+        "",
+        "Table:",
+        "table:Data",
+        " Name\tScore",
+        " Alice\t95",
+        " Bob\t87"
+      ],
+      "expected": [
+        "# Main Heading",
+        "## Sub Heading",
+        "*italic* and ~~strikethrough~~",
+        "***bold italic*** and **~~bold strikethrough~~**",
+        "",
+        "Links and Images:",
+        "[Google](https://google.com)",
+        "![](https://example.com/image.png)",
+        "![img](https://example.com/logo.png)",
+        "",
+        "Lists:",
+        "- Item 1",
+        "  - Nested 1-1",
+        "    - Deep nested",
+        "- Item 2",
+        "",
+        "Code:",
+        "```python",
+        "def hello():",
+        "    print(\"world\")",
+        "```",
+        "",
+        "Math:",
+        "[$ E = mc^2 $]",
+        "",
+        "$$",
+        "V(X) = E[(X-\\mu)^2]",
+        "$$",
+        "",
+        "Table:",
+        "## Data",
+        "",
+        "| Name | Score |",
+        "|---|---|",
+        "| Alice | 95 |",
+        "| Bob | 87 |"
+      ]
+    }
+  ]
+}
