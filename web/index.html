@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cosense ライブプレビュー</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --border: #d0d7de;
+        --bg-raw: #f6f8fa;
+      }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; margin: 0; }
+      body {
+        display: flex;
+        flex-direction: column;
+        font: 14px/1.6 system-ui, sans-serif;
+      }
+      header {
+        padding: 0.6rem 1rem;
+        border-bottom: 1px solid var(--border);
+      }
+      header h1 { font-size: 1rem; margin: 0; }
+      main { flex: 1; display: flex; min-height: 0; }
+      .pane { flex: 1 1 50%; min-width: 0; overflow: auto; }
+      #input {
+        width: 100%;
+        height: 100%;
+        border: 0;
+        border-right: 1px solid var(--border);
+        padding: 1rem;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 13px;
+        resize: none;
+        tab-size: 2;
+      }
+      #input:focus { outline: none; }
+      .preview { padding: 1rem; }
+      .preview :first-child { margin-top: 0; }
+      .preview pre {
+        background: var(--bg-raw);
+        padding: 0.8rem;
+        border-radius: 6px;
+        overflow: auto;
+      }
+      .preview table { border-collapse: collapse; }
+      .preview th, .preview td { border: 1px solid var(--border); padding: 0.3rem 0.6rem; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Cosense ライブプレビュー</h1>
+    </header>
+    <main>
+      <div class="pane">
+        <textarea id="input" spellcheck="false" aria-label="Cosense 入力">
+[* Cosense ライブプレビュー]
+[/ italic] と [[bold]] と [- strike] と [*/ strong italic]
+[tag] と [Google https://google.com]
+
+ リスト1
+  ネスト
+ リスト2
+
+code:python
+ def hello():
+     print("world")
+
+code:tex
+ E = mc^2
+
+table:Data
+ Name	Score
+ Alice	95
+ Bob	87
+</textarea>
+      </div>
+      <div class="pane">
+        <div id="preview" class="preview"></div>
+      </div>
+    </main>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>
