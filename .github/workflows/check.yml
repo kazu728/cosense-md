@@ -7,24 +7,51 @@ on:
   workflow_dispatch:
 
 jobs:
-  lint:
-    name: Lint & Format
+  rust:
+    name: Rust (fmt / clippy / test)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo fmt --all --check
+      - run: cargo clippy -p cosense-core -p cosense-py --all-targets -- -D warnings
+      - run: cargo clippy -p cosense-wasm --target wasm32-unknown-unknown -- -D warnings
+      # Golden conformance (markdown fixture) and proptest invariants.
+      - run: cargo test -p cosense-core
+
+  lint:
+    name: Python Lint & Format
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: markitdown-cosense
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
       - uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
       - run: |
           uv sync --extra dev
-          uv run ruff format --check src tests
-          uv run ruff check src tests --output-format=github
+          uv run ruff format --check python tests
+          uv run ruff check python tests --output-format=github
 
   typecheck:
-    name: Type Check
+    name: Python Type Check
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: markitdown-cosense
     steps:
       - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
       - uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
@@ -33,10 +60,14 @@ jobs:
           uv run pyright
 
   test:
-    name: Tests
+    name: Python Tests
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: markitdown-cosense
     steps:
       - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
       - uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
@@ -44,3 +75,6 @@ jobs:
           uv sync --extra dev
           uv run pytest
           uv run markitdown --use-plugins tests/test_cosense_notation.txt > /tmp/out.md
+          # Smoke: the plugin actually ran and produced known Markdown output.
+          test -s /tmp/out.md
+          grep -qF '# Heading Level 1' /tmp/out.md
