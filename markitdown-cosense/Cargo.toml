@@ -1,0 +1,17 @@
+[package]
+name = "cosense-py"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "PyO3 binding for cosense-core (MarkItDown plugin backend)"
+
+[lib]
+name = "_core"
+crate-type = ["cdylib"]
+
+[dependencies]
+cosense-core = { path = "../crates/cosense-core" }
+# abi3-py310: build against the stable ABI so one wheel per platform covers
+# Python 3.10+ (matches requires-python).
+pyo3 = { version = "0.23", features = ["extension-module", "abi3-py310"] }

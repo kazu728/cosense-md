@@ -1,44 +1,28 @@
-"""Integration-level tests for the Cosense → Markdown plugin."""
+"""Integration tests for the Cosense → Markdown plugin (MarkItDown + glue)."""
 
 from __future__ import annotations
 
 import io
-import re
 from collections.abc import Iterable
 from pathlib import Path
 
 import pytest
 from markitdown import MarkItDown, StreamInfo
 
-from markitdown_cosense import register_converters
-from markitdown_cosense._plugin import IMAGE_EXTENSIONS, MarkdownConverter
-from markitdown_cosense.renderer import InlineProcessor, build_inline_rules
-
-# ---------------------------------------------------------------------------
-# Fixtures
-# ---------------------------------------------------------------------------
+from markitdown_cosense import _core, register_converters
+from markitdown_cosense._plugin import MarkdownConverter
 
 
-@pytest.fixture()
+@pytest.fixture
 def markitdown_with_cosense() -> MarkItDown:
     md = MarkItDown()
     register_converters(md)
     return md
 
 
-@pytest.fixture()
+@pytest.fixture
 def converter() -> MarkdownConverter:
     return MarkdownConverter()
-
-
-@pytest.fixture()
-def inline_processor() -> InlineProcessor:
-    return InlineProcessor(build_inline_rules(IMAGE_EXTENSIONS))
-
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
 
 
 def _convert_stream(md: MarkItDown, text: str, extension: str = ".txt") -> str:
@@ -47,28 +31,31 @@ def _convert_stream(md: MarkItDown, text: str, extension: str = ".txt") -> str:
     return result.text_content
 
 
-def _bytes_stream(text: str) -> io.BytesIO:
-    return io.BytesIO(text.encode("utf-8"))
+class _NonSeekable(io.BytesIO):
+    """A byte stream that refuses to rewind, to exercise the non-seekable path."""
+
+    def seekable(self) -> bool:
+        return False
+
+    def seek(self, *args: object, **kwargs: object) -> int:
+        raise OSError("not seekable")
+
+    def tell(self, *args: object, **kwargs: object) -> int:
+        raise OSError("not seekable")
 
 
 # ---------------------------------------------------------------------------
-# Integration tests
+# Conversion via MarkItDown
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize(
     "source,expected",
     [
+        ("[* Title]\n[tag]", "# Title\n<!-- tag: tag -->"),
+        ("code:python\n print('hello')", "```python\nprint('hello')\n```"),
         (
-            "[* Title]\n[tag]",
-            "# Title\n<!-- tag: tag -->",
-        ),
-        (
-            "code:python\nprint('hello')",
-            "```python\nprint('hello')\n```",
-        ),
-        (
-            "table:Data\n Name Age\n Alice 30\n Bob 25",
+            "table:Data\n Name\tAge\n Alice\t30\n Bob\t25",
             "## Data\n\n| Name | Age |\n|---|---|\n| Alice | 30 |\n| Bob | 25 |",
         ),
     ],
@@ -77,12 +64,16 @@ def _bytes_stream(text: str) -> io.BytesIO:
 def test_conversion_via_markitdown(
     markitdown_with_cosense: MarkItDown, source: str, expected: str
 ) -> None:
-    output = _convert_stream(markitdown_with_cosense, source, ".txt")
-    assert output == expected
+    assert _convert_stream(markitdown_with_cosense, source) == expected
+
+
+def test_core_backs_the_plugin() -> None:
+    # The plugin output is exactly the core's markdown output.
+    assert _core.convert("[* Title]") == "# Title"
 
 
 # ---------------------------------------------------------------------------
-# Converter accept heuristics
+# accepts heuristics and stream handling
 # ---------------------------------------------------------------------------
 
 
@@ -90,7 +81,7 @@ def test_conversion_via_markitdown(
     "snippet,expected",
     [
         ("[* Heading]\n[tag]", True),
-        ("code:python\nprint()", True),
+        ("code:python\n print()", True),
         ("table:Users\n Name", True),
         ("Plain text without markers", False),
         ("", False),
@@ -100,37 +91,31 @@ def test_conversion_via_markitdown(
 def test_accepts_heuristics(
     converter: MarkdownConverter, snippet: str, expected: bool
 ) -> None:
-    stream = _bytes_stream(snippet)
-    info = StreamInfo(extension=".md")
-    assert converter.accepts(stream, info) is expected
+    stream = io.BytesIO(snippet.encode("utf-8"))
+    assert converter.accepts(stream, StreamInfo(extension=".md")) is expected
 
 
 def test_accepts_does_not_consume_stream(converter: MarkdownConverter) -> None:
     payload = "[* note]\n[tag]"
-    stream = _bytes_stream(payload)
-    info = StreamInfo(extension=".md")
-    assert converter.accepts(stream, info)
-    remaining = stream.read().decode("utf-8")
-    assert remaining == payload
+    stream = io.BytesIO(payload.encode("utf-8"))
+    assert converter.accepts(stream, StreamInfo(extension=".md"))
+    assert stream.read().decode("utf-8") == payload
+
+
+def test_accepts_refuses_non_seekable_stream(converter: MarkdownConverter) -> None:
+    stream = _NonSeekable(b"[* Heading]\n[tag]")
+    # Cannot rewind, so the converter declines rather than consuming it.
+    assert converter.accepts(stream, StreamInfo(extension=".md")) is False
+
+
+def test_convert_non_utf8_does_not_raise(converter: MarkdownConverter) -> None:
+    stream = io.BytesIO("[* 見出し]".encode("shift_jis"))
+    result = converter.convert(stream, StreamInfo(extension=".txt"))
+    assert isinstance(result.text_content, str)
 
 
 # ---------------------------------------------------------------------------
-# Inline processor behaviour
-# ---------------------------------------------------------------------------
-
-
-def test_inline_rules_are_stable(inline_processor: InlineProcessor) -> None:
-    assert inline_processor.apply("[tag]") == "<!-- tag: tag -->"
-    assert inline_processor.apply("[/ text]") == "*text*"
-
-
-def test_invalid_inline_pattern_raises() -> None:
-    with pytest.raises(re.error):
-        InlineProcessor([("[invalid(regex", "replacement")])
-
-
-# ---------------------------------------------------------------------------
-# Filesystem integration via MarkItDown API
+# Filesystem integration
 # ---------------------------------------------------------------------------
 
 
@@ -141,9 +126,8 @@ def test_invalid_inline_pattern_raises() -> None:
 def test_markitdown_convert_from_file(
     markitdown_with_cosense: MarkItDown, tmp_path: Path, lines: Iterable[str]
 ) -> None:
-    payload = "\n".join(lines)
     path = tmp_path / "note.txt"
-    path.write_text(payload, encoding="utf-8")
+    path.write_text("\n".join(lines), encoding="utf-8")
 
     result = markitdown_with_cosense.convert(path)
     assert "# File Heading" in result.text_content
