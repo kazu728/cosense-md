@@ -52,7 +52,7 @@ class _NonSeekable(io.BytesIO):
 @pytest.mark.parametrize(
     "source,expected",
     [
-        ("[* Title]\n[tag]", "# Title\n<!-- tag: tag -->"),
+        ("[* Title]\n[tag]", "# Title\n#tag"),
         ("code:python\n print('hello')", "```python\nprint('hello')\n```"),
         (
             "table:Data\n Name\tAge\n Alice\t30\n Bob\t25",
