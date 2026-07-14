@@ -113,21 +113,21 @@ pub fn parse(text: &str) -> Document {
                 });
                 i += 1;
             }
-            TokenKind::Fence { .. } => {
+            TokenKind::Fence { language } => {
                 flush_paragraph(&mut paragraph, &mut blocks);
-                let (block, next) = parse_fenced_code(&tokens, i);
+                let (block, next) = parse_fenced_code(&tokens, i, language.clone());
                 blocks.push(block);
                 i = next;
             }
-            TokenKind::CodeDirective { .. } => {
+            TokenKind::CodeDirective { descriptor } => {
                 flush_paragraph(&mut paragraph, &mut blocks);
-                let (block, next) = parse_code_block(&tokens, i);
+                let (block, next) = parse_code_block(&tokens, i, descriptor.clone());
                 blocks.push(block);
                 i = next;
             }
-            TokenKind::TableDirective { .. } => {
+            TokenKind::TableDirective { title } => {
                 flush_paragraph(&mut paragraph, &mut blocks);
-                let (block, next) = parse_table(&tokens, i);
+                let (block, next) = parse_table(&tokens, i, title.clone());
                 if let Some(block) = block {
                     blocks.push(block);
                 }
@@ -225,12 +225,8 @@ fn tokenize(text: &str) -> Vec<Token> {
     tokens
 }
 
-fn parse_fenced_code(tokens: &[Token], start: usize) -> (Block, usize) {
+fn parse_fenced_code(tokens: &[Token], start: usize, language: String) -> (Block, usize) {
     let start_token = &tokens[start];
-    let language = match &start_token.kind {
-        TokenKind::Fence { language } => language.clone(),
-        _ => String::new(),
-    };
     let base_indent = start_token.indent;
     let prefix = first_chars(&start_token.raw, base_indent);
 
@@ -260,12 +256,8 @@ fn parse_fenced_code(tokens: &[Token], start: usize) -> (Block, usize) {
     )
 }
 
-fn parse_code_block(tokens: &[Token], start: usize) -> (Block, usize) {
+fn parse_code_block(tokens: &[Token], start: usize, descriptor: String) -> (Block, usize) {
     let directive = &tokens[start];
-    let descriptor = match &directive.kind {
-        TokenKind::CodeDirective { descriptor } => descriptor.clone(),
-        _ => String::new(),
-    };
     let base_indent = directive.indent;
     let indent = first_chars(&directive.raw, base_indent);
 
@@ -331,12 +323,7 @@ fn parse_code_block(tokens: &[Token], start: usize) -> (Block, usize) {
     }
 }
 
-fn parse_table(tokens: &[Token], start: usize) -> (Option<Block>, usize) {
-    let title = match &tokens[start].kind {
-        TokenKind::TableDirective { title } => title.clone(),
-        _ => None,
-    };
-
+fn parse_table(tokens: &[Token], start: usize, title: Option<String>) -> (Option<Block>, usize) {
     let mut rows: Vec<Vec<String>> = Vec::new();
     let mut i = start + 1;
     while i < tokens.len() {
