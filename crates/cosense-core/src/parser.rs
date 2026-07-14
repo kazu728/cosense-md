@@ -265,13 +265,6 @@ fn parse_code_block(tokens: &[Token], start: usize, descriptor: String) -> (Bloc
     let mut i = start + 1;
     while i < tokens.len() {
         let current = &tokens[i];
-        if matches!(
-            current.kind,
-            TokenKind::CodeDirective { .. } | TokenKind::TableDirective { .. }
-        ) {
-            break;
-        }
-
         if current.is_blank() {
             let mut next = i + 1;
             while next < tokens.len() && tokens[next].is_blank() {
@@ -285,11 +278,7 @@ fn parse_code_block(tokens: &[Token], start: usize, descriptor: String) -> (Bloc
                 break;
             }
             let following = &tokens[next];
-            if matches!(
-                following.kind,
-                TokenKind::CodeDirective { .. } | TokenKind::TableDirective { .. }
-            ) || following.indent <= base_indent
-            {
+            if following.indent <= base_indent {
                 break;
             }
             collected.push(current.raw.clone());
@@ -297,9 +286,10 @@ fn parse_code_block(tokens: &[Token], start: usize, descriptor: String) -> (Bloc
             continue;
         }
 
-        // A non-blank line belongs to the block only while it is indented
-        // deeper than the directive. This is the single condition that keeps a
-        // shallow line after the code from being swallowed.
+        // A line belongs to the block while it is indented deeper than the
+        // directive — a nested `code:`/`table:` line included, which is body text
+        // here rather than a new block. Any line at or below the directive's
+        // indent ends the block.
         if current.indent > base_indent {
             collected.push(current.raw.clone());
             i += 1;

@@ -185,6 +185,11 @@
       "id": "code_block_ends_on_blank_then_unindented",
       "source": ["code:py", " line 1", "", "outside"],
       "expected": ["```py", "line 1", "```", "", "outside"]
+    },
+    {
+      "id": "code_block_body_keeps_nested_code_line",
+      "source": ["code:py", " print('start')", " code: still code", " print('end')"],
+      "expected": ["```py", "print('start')", "code: still code", "print('end')", "```"]
     }
   ],
   "lists_and_tables": [
