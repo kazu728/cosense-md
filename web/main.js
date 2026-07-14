@@ -35,10 +35,12 @@ await init();
 input.addEventListener("input", render);
 tabPreview.addEventListener("click", () => selectTab(false));
 tabMarkdown.addEventListener("click", () => selectTab(true));
+const copyLabel = copy.textContent;
+let copyResetTimer;
 copy.addEventListener("click", async () => {
   await navigator.clipboard.writeText(markdown.value);
-  const prev = copy.textContent;
   copy.textContent = "コピーしました";
-  setTimeout(() => { copy.textContent = prev; }, 1200);
+  clearTimeout(copyResetTimer);
+  copyResetTimer = setTimeout(() => { copy.textContent = copyLabel; }, 1200);
 });
 render();
