@@ -14,4 +14,4 @@ crate-type = ["cdylib"]
 cosense-core = { path = "../crates/cosense-core" }
 # abi3-py310: build against the stable ABI so one wheel per platform covers
 # Python 3.10+ (matches requires-python).
-pyo3 = { version = "0.23", features = ["extension-module", "abi3-py310"] }
+pyo3 = { version = "0.25", features = ["extension-module", "abi3-py310"] }

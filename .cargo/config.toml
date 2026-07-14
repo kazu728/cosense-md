@@ -1,4 +1,0 @@
-# Allow building the PyO3 abi3 extension against Python interpreters newer than
-# the one PyO3 was released for; the stable ABI keeps the result compatible.
-[env]
-PYO3_USE_ABI3_FORWARD_COMPATIBILITY = "1"
