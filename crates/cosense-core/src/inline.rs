@@ -118,10 +118,27 @@ fn classify_bracket(inner: &str) -> Inline {
     Inline::Unknown(format!("[{inner}]"))
 }
 
-/// `[*/ x]` `[*- x]` `[/- x]` `[/ x]` `[- x]` — a decoration marker must be
-/// followed by whitespace, which is what keeps `[/project/page]` from being read
-/// as italic.
+/// `[* x]` `[** x]` (bold), `[*/ x]` `[*- x]` `[/- x]` `[/ x]` `[- x]` — a
+/// decoration marker must be followed by whitespace, which is what keeps
+/// `[/project/page]` from being read as italic.
 fn decoration(inner: &str) -> Option<Emphasis> {
+    // Bold is a run of one or more `*` (Cosense scales the size by count; Markdown
+    // has a single bold), so it does not fit the fixed-string table below. Combos
+    // like `*/` are left to the table: their leading `*` is followed by `/`, not
+    // whitespace, so this rule never claims them.
+    let stars = inner.chars().take_while(|&c| c == '*').count();
+    if stars > 0 {
+        let after = &inner[stars..];
+        if after.starts_with(|c: char| c.is_whitespace()) {
+            return Some(Emphasis {
+                bold: true,
+                italic: false,
+                strike: false,
+                text: after.trim_start().to_string(),
+            });
+        }
+    }
+
     const MARKERS: [(&str, bool, bool, bool); 5] = [
         ("*/", true, true, false),
         ("*-", true, false, true),

@@ -118,9 +118,14 @@
       "expected": ["See [Label](https://example.com) here"]
     },
     {
-      "id": "inline_star_decoration_passthrough",
+      "id": "inline_star_decoration_bold",
       "source": ["text [* bold] mid"],
-      "expected": ["text [* bold] mid"]
+      "expected": ["text **bold** mid"]
+    },
+    {
+      "id": "inline_multi_star_decoration_bold",
+      "source": ["text [** bold] and [*** more] mid"],
+      "expected": ["text **bold** and **more** mid"]
     }
   ],
   "headings_and_paragraphs": [
