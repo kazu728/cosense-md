@@ -194,6 +194,11 @@
       "expected": ["- Item 1", "  - Sub-item 1.1", "    - Sub-sub-item", "  - Sub-item 1.2", "- Item 2"]
     },
     {
+      "id": "irregular_indent_normalized",
+      "source": [" a", "    b", "  c"],
+      "expected": ["- a", "  - b", "  - c"]
+    },
+    {
       "id": "table_rendering",
       "source": ["table:Users", " Name\tAge\tCity", " Alice\t30\tTokyo", " Bob\t25\tOsaka"],
       "expected": ["## Users", "", "| Name | Age | City |", "|---|---|---|", "| Alice | 30 | Tokyo |", "| Bob | 25 | Osaka |"]

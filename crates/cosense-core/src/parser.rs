@@ -357,7 +357,9 @@ fn split_cells(content: &str) -> Vec<String> {
 }
 
 fn parse_list(tokens: &[Token], start: usize) -> (Block, usize) {
-    let mut items: Vec<(usize, String)> = Vec::new();
+    let mut items: Vec<ListItem> = Vec::new();
+    // Raw indentation depths of the ancestors still open above the current item.
+    let mut ancestors: Vec<usize> = Vec::new();
     let mut i = start;
     while i < tokens.len() {
         let current = &tokens[i];
@@ -365,41 +367,21 @@ fn parse_list(tokens: &[Token], start: usize) -> (Block, usize) {
             break;
         }
         let depth = current.indent.saturating_sub(1);
-        items.push((depth, current.content().to_string()));
+        // Normalize irregular indentation to sequential nesting levels: the level
+        // is the number of strictly-shallower ancestors. An explicit stack (not a
+        // recursive tree) means nesting costs no call-stack, so arbitrarily deep
+        // input converts instead of overflowing.
+        while ancestors.last().is_some_and(|&d| d >= depth) {
+            ancestors.pop();
+        }
+        items.push(ListItem {
+            level: ancestors.len(),
+            text: current.content().to_string(),
+        });
+        ancestors.push(depth);
         i += 1;
     }
-    (
-        Block::BulletList {
-            items: build_list_tree(&items),
-        },
-        i,
-    )
-}
-
-/// Nest items by comparing indentation depths: an item's children are the
-/// following items whose depth is strictly greater, until depth returns.
-fn build_list_tree(items: &[(usize, String)]) -> Vec<ListItem> {
-    let mut pos = 0;
-    build_children(items, &mut pos, -1)
-}
-
-fn build_children(
-    items: &[(usize, String)],
-    pos: &mut usize,
-    parent_depth: isize,
-) -> Vec<ListItem> {
-    let mut result = Vec::new();
-    while *pos < items.len() {
-        let depth = items[*pos].0 as isize;
-        if depth <= parent_depth {
-            break;
-        }
-        let text = items[*pos].1.clone();
-        *pos += 1;
-        let children = build_children(items, pos, depth);
-        result.push(ListItem { text, children });
-    }
-    result
+    (Block::BulletList { items }, i)
 }
 
 fn normalize_code_lines(lines: &[String]) -> Vec<String> {

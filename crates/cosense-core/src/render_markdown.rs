@@ -45,7 +45,7 @@ fn render_block(block: &Block) -> Vec<String> {
             body.push(format!("{indent}$$"));
             body
         }
-        Block::BulletList { items } => render_list(items, 0),
+        Block::BulletList { items } => render_list(items),
         Block::Table {
             title,
             header,
@@ -54,17 +54,16 @@ fn render_block(block: &Block) -> Vec<String> {
     }
 }
 
-fn render_list(items: &[ListItem], depth: usize) -> Vec<String> {
-    let indent = "  ".repeat(depth);
-    let mut lines = Vec::new();
-    for item in items {
-        let text = render_inline(&item.text);
-        lines.push(format!("{indent}- {text}").trim_end().to_string());
-        if !item.children.is_empty() {
-            lines.extend(render_list(&item.children, depth + 1));
-        }
-    }
-    lines
+fn render_list(items: &[ListItem]) -> Vec<String> {
+    items
+        .iter()
+        .map(|item| {
+            let indent = "  ".repeat(item.level);
+            format!("{indent}- {}", render_inline(&item.text))
+                .trim_end()
+                .to_string()
+        })
+        .collect()
 }
 
 fn render_table(title: Option<&str>, header: &[String], rows: &[Vec<String>]) -> Vec<String> {

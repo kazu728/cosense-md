@@ -44,3 +44,29 @@ proptest! {
         prop_assert_eq!(out, input);
     }
 }
+
+/// A list nested thousands deep converts instead of overflowing the stack. List
+/// nesting is handled with an explicit stack and a flat item vector — no
+/// recursion over depth in the build, render, or drop — so depth costs no call
+/// frames. Guards the totality claim in `lib.rs`.
+#[test]
+fn deeply_nested_list_does_not_overflow() {
+    let depth = 5000;
+    // Each line is indented one space deeper than the last, so it nests one level
+    // further: a strictly increasing chain that a recursive parser/renderer would
+    // descend to the bottom of.
+    let input: String = (1..=depth)
+        .map(|n| format!("{}item", " ".repeat(n)))
+        .collect::<Vec<_>>()
+        .join("\n");
+
+    let out = convert(&input);
+
+    let lines: Vec<&str> = out.lines().collect();
+    assert_eq!(lines.len(), depth);
+    // Levels run 0..depth, so the deepest bullet has depth-1 indent units.
+    assert_eq!(
+        lines[depth - 1],
+        format!("{}- item", "  ".repeat(depth - 1))
+    );
+}

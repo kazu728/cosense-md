@@ -34,10 +34,13 @@ pub enum Block {
     },
 }
 
+/// One bullet: its nesting level (0-based) and inline text. Cosense lists are a
+/// flat sequence — irregular indentation is normalized to sequential levels while
+/// parsing — so there is no recursive tree to build, render, or drop.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ListItem {
+    pub level: usize,
     pub text: String,
-    pub children: Vec<ListItem>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
