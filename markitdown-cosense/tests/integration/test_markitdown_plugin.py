@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import io
-from collections.abc import Iterable
 from pathlib import Path
 
 import pytest
@@ -119,13 +118,10 @@ def test_convert_non_utf8_does_not_raise(converter: MarkdownConverter) -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize(
-    "lines",
-    [pytest.param(["[* File Heading]", "[img https://example.com/logo.png]"])],
-)
 def test_markitdown_convert_from_file(
-    markitdown_with_cosense: MarkItDown, tmp_path: Path, lines: Iterable[str]
+    markitdown_with_cosense: MarkItDown, tmp_path: Path
 ) -> None:
+    lines = ["[* File Heading]", "[img https://example.com/logo.png]"]
     path = tmp_path / "note.txt"
     path.write_text("\n".join(lines), encoding="utf-8")
 

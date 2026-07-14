@@ -49,13 +49,9 @@ dev-dependencies = ["markitdown-cosense[dev]"]
 
 [tool.pyright]
 include = ["python"]
-exclude = ["**/node_modules", "**/__pycache__", "**/.*"]
 pythonVersion = "3.10"
 pythonPlatform = "All"
 typeCheckingMode = "basic"
-useLibraryCodeForTypes = true
-reportMissingImports = "warning"
-reportMissingTypeStubs = false
 reportUnusedImport = "warning"
 reportUnusedClass = "warning"
 reportUnusedFunction = "warning"
@@ -84,7 +80,3 @@ select = [
     "F",   # pyflakes
     "UP",  # pyupgrade
 ]
-
-[tool.ruff.format]
-quote-style = "double"
-indent-style = "space"
