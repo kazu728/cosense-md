@@ -47,7 +47,7 @@ class MarkdownConverter(DocumentConverter):
     def _peek(self, file_stream: BinaryIO, size: int = 4096) -> str:
         # Only peek streams we can rewind. A non-seekable stream is refused here
         # rather than partially consumed, so convert always sees it from byte 0.
-        if not getattr(file_stream, "seekable", lambda: False)():
+        if not file_stream.seekable():
             return ""
         position = file_stream.tell()
         snippet = file_stream.read(size)

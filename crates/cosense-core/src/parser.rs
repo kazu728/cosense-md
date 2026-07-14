@@ -71,10 +71,6 @@ impl Token {
     fn content(&self) -> &str {
         self.raw.trim()
     }
-
-    fn stripped(&self) -> &str {
-        char_substr_from(&self.raw, self.indent)
-    }
 }
 
 fn leading_ws(line: &str) -> usize {
@@ -150,10 +146,6 @@ pub fn parse(text: &str) -> Document {
         }
     }
     flush_paragraph(&mut paragraph, &mut blocks);
-
-    while matches!(blocks.last(), Some(Block::BlankLine)) {
-        blocks.pop();
-    }
     Document { blocks }
 }
 
@@ -259,7 +251,7 @@ fn parse_fenced_code(tokens: &[Token], start: usize) -> (Block, usize) {
     }
 
     (
-        Block::CodeBlock {
+        Block::Code {
             language,
             lines: collected,
             indent: prefix,
@@ -326,10 +318,10 @@ fn parse_code_block(tokens: &[Token], start: usize) -> (Block, usize) {
 
     let lines = normalize_code_lines(&collected);
     if descriptor.to_lowercase() == "tex" {
-        (Block::MathBlock { lines, indent }, i)
+        (Block::Math { lines, indent }, i)
     } else {
         (
-            Block::CodeBlock {
+            Block::Code {
                 language: infer_language(&descriptor),
                 lines,
                 indent,
@@ -386,7 +378,7 @@ fn parse_list(tokens: &[Token], start: usize) -> (Block, usize) {
             break;
         }
         let depth = current.indent.saturating_sub(1);
-        items.push((depth, current.stripped().trim().to_string()));
+        items.push((depth, current.content().to_string()));
         i += 1;
     }
     (

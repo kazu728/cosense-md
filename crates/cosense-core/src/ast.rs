@@ -15,12 +15,12 @@ pub enum Block {
         text: String,
     },
     BlankLine,
-    CodeBlock {
+    Code {
         language: String,
         lines: Vec<String>,
         indent: String,
     },
-    MathBlock {
+    Math {
         lines: Vec<String>,
         indent: String,
     },

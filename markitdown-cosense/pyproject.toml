@@ -52,10 +52,8 @@ include = ["python"]
 pythonVersion = "3.10"
 pythonPlatform = "All"
 typeCheckingMode = "basic"
-reportUnusedImport = "warning"
 reportUnusedClass = "warning"
 reportUnusedFunction = "warning"
-reportUnusedVariable = "warning"
 
 
 [tool.maturin]

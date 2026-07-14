@@ -9,8 +9,6 @@ mod inline;
 mod parser;
 mod render_markdown;
 
-pub use ast::{Block, Document, Emphasis, Inline, ListItem};
-pub use inline::IMAGE_EXTENSIONS;
 pub use parser::looks_like_cosense;
 
 pub fn convert(text: &str) -> String {

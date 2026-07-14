@@ -24,7 +24,7 @@ fn render_block(block: &Block) -> Vec<String> {
             .map(str::to_string)
             .collect(),
         Block::BlankLine => vec![String::new()],
-        Block::CodeBlock {
+        Block::Code {
             language,
             lines,
             indent,
@@ -39,7 +39,7 @@ fn render_block(block: &Block) -> Vec<String> {
             body.push(format!("{indent}```"));
             body
         }
-        Block::MathBlock { lines, indent } => {
+        Block::Math { lines, indent } => {
             let mut body = vec![format!("{indent}$$")];
             body.extend(lines.iter().map(|line| format!("{indent}{line}")));
             body.push(format!("{indent}$$"));
