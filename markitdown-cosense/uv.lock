@@ -310,7 +310,7 @@ dependencies = [
     { name = "markitdown" },
 ]
 
-[package.optional-dependencies]
+[package.dev-dependencies]
 dev = [
     { name = "maturin" },
     { name = "pyright" },
@@ -319,24 +319,17 @@ dev = [
     { name = "ruff" },
 ]
 
-[package.dev-dependencies]
-dev = [
-    { name = "markitdown-cosense", extra = ["dev"] },
-]
-
 [package.metadata]
-requires-dist = [
-    { name = "markitdown", specifier = ">=0.1.1" },
-    { name = "maturin", marker = "extra == 'dev'", specifier = ">=1.7,<2.0" },
-    { name = "pyright", marker = "extra == 'dev'", specifier = ">=1.1.390" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.3.5" },
-    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4.0.0" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.11.12" },
-]
-provides-extras = ["dev"]
+requires-dist = [{ name = "markitdown", specifier = ">=0.1.1" }]
 
 [package.metadata.requires-dev]
-dev = [{ name = "markitdown-cosense", extras = ["dev"] }]
+dev = [
+    { name = "maturin", specifier = ">=1.7,<2.0" },
+    { name = "pyright", specifier = ">=1.1.390" },
+    { name = "pytest", specifier = ">=8.3.5" },
+    { name = "pytest-cov", specifier = ">=4.0.0" },
+    { name = "ruff", specifier = ">=0.11.12" },
+]
 
 [[package]]
 name = "maturin"

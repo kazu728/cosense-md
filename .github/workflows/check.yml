@@ -42,7 +42,7 @@ jobs:
         with:
           enable-cache: true
       - run: |
-          uv sync --extra dev
+          uv sync
           uv run ruff format --check python tests
           uv run ruff check python tests --output-format=github
 
@@ -61,7 +61,7 @@ jobs:
         with:
           enable-cache: true
       - run: |
-          uv sync --extra dev
+          uv sync
           uv run pyright
 
   test:
@@ -79,7 +79,7 @@ jobs:
         with:
           enable-cache: true
       - run: |
-          uv sync --extra dev
+          uv sync
           uv run pytest
           uv run markitdown --use-plugins tests/test_cosense_notation.txt > /tmp/out.md
           # Smoke: the plugin actually ran and produced known Markdown output.

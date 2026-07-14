@@ -27,15 +27,6 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
 ]
 
-[project.optional-dependencies]
-dev = [
-    "pytest>=8.3.5",
-    "pytest-cov>=4.0.0",
-    "ruff>=0.11.12",
-    "pyright>=1.1.390",
-    "maturin>=1.7,<2.0",
-]
-
 [project.urls]
 Homepage = "https://github.com/kazu728/markitdown-cosense"
 Repository = "https://github.com/kazu728/markitdown-cosense"
@@ -44,8 +35,14 @@ Issues = "https://github.com/kazu728/markitdown-cosense/issues"
 [project.entry-points."markitdown.plugin"]
 markitdown-cosense = "markitdown_cosense"
 
-[tool.uv]
-dev-dependencies = ["markitdown-cosense[dev]"]
+[dependency-groups]
+dev = [
+    "pytest>=8.3.5",
+    "pytest-cov>=4.0.0",
+    "ruff>=0.11.12",
+    "pyright>=1.1.390",
+    "maturin>=1.7,<2.0",
+]
 
 [tool.pyright]
 include = ["python"]
