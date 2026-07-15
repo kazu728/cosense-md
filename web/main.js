@@ -5,10 +5,10 @@
 // HTML from the source. DOMPurify stays as defense-in-depth on the result.
 
 import init, { convert } from "./pkg/cosense_wasm.js";
-import MarkdownIt from "https://esm.sh/markdown-it@14";
-import DOMPurify from "https://esm.sh/dompurify@3";
 
-const md = new MarkdownIt({ html: false, linkify: true });
+// markdown-it, DOMPurify, and KaTeX load from pinned CDN URLs with SRI as classic
+// scripts in index.html, so they arrive as globals here.
+const md = window.markdownit({ html: false, linkify: true });
 
 const input = document.getElementById("input");
 const preview = document.getElementById("preview");
@@ -19,7 +19,13 @@ const tabMarkdown = document.getElementById("tab-markdown");
 
 function render() {
   const src = convert(input.value);
-  preview.innerHTML = DOMPurify.sanitize(md.render(src));
+  preview.innerHTML = window.DOMPurify.sanitize(md.render(src));
+  // Typeset math into the DOM after sanitizing, so DOMPurify never sees (and so
+  // cannot strip) KaTeX's output. `code:tex` blocks convert to `$$…$$`.
+  window.renderMathInElement(preview, {
+    delimiters: [{ left: "$$", right: "$$", display: true }],
+    throwOnError: false,
+  });
   markdown.value = src;
 }
 
