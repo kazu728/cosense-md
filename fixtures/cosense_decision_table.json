@@ -190,6 +190,21 @@
       "id": "code_block_body_keeps_nested_code_line",
       "source": ["code:py", " print('start')", " code: still code", " print('end')"],
       "expected": ["```py", "print('start')", "code: still code", "print('end')", "```"]
+    },
+    {
+      "id": "list_nested_code_block",
+      "source": [" item", "  code:python", "   print('hi')"],
+      "expected": ["- item", "  ```python", "  print('hi')", "  ```"]
+    },
+    {
+      "id": "list_nested_math_block",
+      "source": [" 分散", "  code:tex", "   V(X) = E((X-μ)^2)"],
+      "expected": ["- 分散", "  $$", "  V(X) = E((X-μ)^2)", "  $$"]
+    },
+    {
+      "id": "list_nested_code_two_levels",
+      "source": [" examples", "  Python", "   code:python", "    x = 1"],
+      "expected": ["- examples", "  - Python", "    ```python", "    x = 1", "    ```"]
     }
   ],
   "lists_and_tables": [

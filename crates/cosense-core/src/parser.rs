@@ -3,7 +3,7 @@
 //! by `char`, never by byte offset, so tab / full-width-space (U+3000) indents
 //! and multibyte content never split a UTF-8 boundary.
 
-use crate::ast::{Block, Document, ListItem};
+use crate::ast::{Block, Document, ItemContent, ListItem};
 use regex::Regex;
 use std::sync::LazyLock;
 
@@ -257,6 +257,24 @@ fn parse_fenced_code(tokens: &[Token], start: usize, language: String) -> (Block
 }
 
 fn parse_code_block(tokens: &[Token], start: usize, descriptor: String) -> (Block, usize) {
+    let (lines, indent, next) = collect_code_body(tokens, start);
+    let block = if is_math_descriptor(&descriptor) {
+        Block::Math { lines, indent }
+    } else {
+        Block::Code {
+            language: infer_language(&descriptor),
+            lines,
+            indent,
+        }
+    };
+    (block, next)
+}
+
+/// Collect a `code:` directive's body: every line indented deeper than the
+/// directive, with the common leading indent stripped. Returns the normalized
+/// body lines, the directive's own leading-whitespace prefix, and the index of
+/// the first line past the block. Shared by top-level and list-nested code.
+fn collect_code_body(tokens: &[Token], start: usize) -> (Vec<String>, String, usize) {
     let directive = &tokens[start];
     let base_indent = directive.indent;
     let indent = first_chars(&directive.raw, base_indent);
@@ -298,19 +316,7 @@ fn parse_code_block(tokens: &[Token], start: usize, descriptor: String) -> (Bloc
         }
     }
 
-    let lines = normalize_code_lines(&collected);
-    if descriptor.to_lowercase() == "tex" {
-        (Block::Math { lines, indent }, i)
-    } else {
-        (
-            Block::Code {
-                language: infer_language(&descriptor),
-                lines,
-                indent,
-            },
-            i,
-        )
-    }
+    (normalize_code_lines(&collected), indent, i)
 }
 
 fn parse_table(tokens: &[Token], start: usize, title: Option<String>) -> (Option<Block>, usize) {
@@ -364,9 +370,27 @@ fn parse_list(tokens: &[Token], start: usize) -> (Block, usize) {
         while ancestors.last().is_some_and(|&d| d >= depth) {
             ancestors.pop();
         }
+        let level = ancestors.len();
+        if let TokenKind::CodeDirective { descriptor } = &current.kind {
+            // A `code:` block nested under a bullet: its body (indented deeper
+            // than the directive) is consumed here rather than swallowed as
+            // bullets. A block is a leaf, so it is not pushed onto `ancestors`.
+            let (lines, _, next) = collect_code_body(tokens, i);
+            let content = if is_math_descriptor(descriptor) {
+                ItemContent::Math { lines }
+            } else {
+                ItemContent::Code {
+                    language: infer_language(descriptor),
+                    lines,
+                }
+            };
+            items.push(ListItem { level, content });
+            i = next;
+            continue;
+        }
         items.push(ListItem {
-            level: ancestors.len(),
-            text: current.content().to_string(),
+            level,
+            content: ItemContent::Text(current.content().to_string()),
         });
         ancestors.push(depth);
         i += 1;
@@ -398,6 +422,11 @@ fn normalize_code_lines(lines: &[String]) -> Vec<String> {
         normalized.pop();
     }
     normalized
+}
+
+/// A `code:tex` block renders as a `$$` math block rather than fenced code.
+fn is_math_descriptor(descriptor: &str) -> bool {
+    descriptor.eq_ignore_ascii_case("tex")
 }
 
 fn infer_language(descriptor: &str) -> String {

@@ -1,6 +1,6 @@
 //! Markdown renderer: walks the block/inline AST and emits CommonMark.
 
-use crate::ast::{Block, Document, Emphasis, Inline, ListItem};
+use crate::ast::{Block, Document, Emphasis, Inline, ItemContent, ListItem};
 use crate::inline::parse_inline;
 
 pub fn render_markdown(document: &Document) -> String {
@@ -28,23 +28,8 @@ fn render_block(block: &Block) -> Vec<String> {
             language,
             lines,
             indent,
-        } => {
-            let fence = if language.is_empty() {
-                "```".to_string()
-            } else {
-                format!("```{language}")
-            };
-            let mut body = vec![format!("{indent}{fence}")];
-            body.extend(lines.iter().map(|line| format!("{indent}{line}")));
-            body.push(format!("{indent}```"));
-            body
-        }
-        Block::Math { lines, indent } => {
-            let mut body = vec![format!("{indent}$$")];
-            body.extend(lines.iter().map(|line| format!("{indent}{line}")));
-            body.push(format!("{indent}$$"));
-            body
-        }
+        } => render_code(language, lines, indent),
+        Block::Math { lines, indent } => render_math(lines, indent),
         Block::BulletList { items } => render_list(items),
         Block::Table {
             title,
@@ -54,16 +39,47 @@ fn render_block(block: &Block) -> Vec<String> {
     }
 }
 
+// `indent` is the leading whitespace each emitted line carries: the block's own
+// source prefix at top level, or the bullet-derived `"  " * level` when nested.
+fn render_code(language: &str, lines: &[String], indent: &str) -> Vec<String> {
+    let fence = if language.is_empty() {
+        "```".to_string()
+    } else {
+        format!("```{language}")
+    };
+    let mut body = vec![format!("{indent}{fence}")];
+    body.extend(lines.iter().map(|line| format!("{indent}{line}")));
+    body.push(format!("{indent}```"));
+    body
+}
+
+fn render_math(lines: &[String], indent: &str) -> Vec<String> {
+    let mut body = vec![format!("{indent}$$")];
+    body.extend(lines.iter().map(|line| format!("{indent}{line}")));
+    body.push(format!("{indent}$$"));
+    body
+}
+
 fn render_list(items: &[ListItem]) -> Vec<String> {
-    items
-        .iter()
-        .map(|item| {
-            let indent = "  ".repeat(item.level);
-            format!("{indent}- {}", render_inline(&item.text))
-                .trim_end()
-                .to_string()
-        })
-        .collect()
+    let mut lines = Vec::new();
+    for item in items {
+        // A nested block aligns with its parent bullet's text column so Markdown
+        // keeps it inside the list item.
+        let indent = "  ".repeat(item.level);
+        match &item.content {
+            ItemContent::Text(text) => lines.push(
+                format!("{indent}- {}", render_inline(text))
+                    .trim_end()
+                    .to_string(),
+            ),
+            ItemContent::Code {
+                language,
+                lines: body,
+            } => lines.extend(render_code(language, body, &indent)),
+            ItemContent::Math { lines: body } => lines.extend(render_math(body, &indent)),
+        }
+    }
+    lines
 }
 
 fn render_table(title: Option<&str>, header: &[String], rows: &[Vec<String>]) -> Vec<String> {
