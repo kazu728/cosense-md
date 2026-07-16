@@ -9,15 +9,14 @@ Scrapbox Syntax Comprehensive Test File
 Text Formatting
 [/ italic text]
 [- strikethrough text]
-[** bold text **]
-[*** bold text ***]
+Inline [* bold text] within a sentence
 [*/ bold italic text]
 [*- bold strikethrough text]
 [/- italic strikethrough text]
 
 Math Notation
-[$ E = mc^2 $]
-[$  \sum_{i=1}^{n} x_i  $]
+[$ E = mc^2]
+[$ \sum_{i=1}^{n} x_i]
 
 Links and Media
 [Link Title https://example.com]
@@ -49,43 +48,43 @@ List Structure
 
 Code Blocks (Programming Languages)
 code:python
-def hello_world():
-    print("Hello, World!")
-    return 42
+ def hello_world():
+     print("Hello, World!")
+     return 42
 
 code:javascript
-const greeting = "Hello, World!";
-console.log(greeting);
+ const greeting = "Hello, World!";
+ console.log(greeting);
 
 code:typescript
-interface User {
-    name: string;
-    age: number;
-}
+ interface User {
+     name: string;
+     age: number;
+ }
 
 code:bash
-#!/bin/bash
-echo "Hello, World!"
-ls -la
+ #!/bin/bash
+ echo "Hello, World!"
+ ls -la
 
 code:json
-{
-    "name": "example",
-    "version": "1.0.0",
-    "dependencies": {}
-}
+ {
+     "name": "example",
+     "version": "1.0.0",
+     "dependencies": {}
+ }
 
 LaTeX Math Blocks
 Mathematical expression test
 code:tex
-V(X) = E((X-μ)^2)
-σ = √V(X)
-E(X) = μ
+ V(X) = E((X-μ)^2)
+ σ = √V(X)
+ E(X) = μ
 
 Complex formulas
 code:tex
-\sum_{i=1}^{n} x_i = x_1 + x_2 + ... + x_n
-\int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}
+ \sum_{i=1}^{n} x_i = x_1 + x_2 + ... + x_n
+ \int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}
 
 Code Blocks in Lists
  Programming examples
@@ -102,23 +101,23 @@ LaTeX in Lists
  Statistics
   Variance definition
    code:tex
-   V(X) = E((X-μ)^2)
+    V(X) = E((X-μ)^2)
   Standard deviation
    code:tex
-   σ = √V(X)
+    σ = √V(X)
 
 Table Notation
 table:User Information
- Name Age Occupation
- John 25 Engineer
- Jane 30 Designer
- Bob 28 Manager
+ Name	Age	Occupation
+ John	25	Engineer
+ Jane	30	Designer
+ Bob	28	Manager
 
 table:Statistical Data
- Item Value Note
- Mean 75.2 Score
- Variance 12.8 Spread
- StdDev 3.58 Standard deviation
+ Item	Value	Note
+ Mean	75.2	Score
+ Variance	12.8	Spread
+ StdDev	3.58	Standard deviation
 
 Mixed Content
 [** Data Analysis Procedure]
@@ -130,7 +129,7 @@ Mixed Content
  Statistical Calculation
   Variance calculation formula
    code:tex
-   V(X) = \frac{1}{n}\sum_{i=1}^{n}(x_i - \bar{x})^2
+    V(X) = \frac{1}{n}\sum_{i=1}^{n}(x_i - \bar{x})^2
   Implementation example
    code:python
     variance = df['column'].var()
@@ -152,19 +151,19 @@ Image Embedding
 
 Multi-line Code Blocks (with empty lines)
 code:python
-def complex_function():
-    # Comment
-    x = 1
-    
-    # Code with empty lines
-    y = 2
-    
-    return x + y
+ def complex_function():
+     # Comment
+     x = 1
 
-LaTeX with Non-Math Text (should not be treated as math)
+     # Code with empty lines
+     y = 2
+
+     return x + y
+
+LaTeX with Non-Math Text (content preserved verbatim)
 code:tex
-E(X) = μ
-This is the definition of expected value
-V(X) = σ^2
+ E(X) = μ
+ This is the definition of expected value
+ V(X) = σ^2
 
 End of test file
