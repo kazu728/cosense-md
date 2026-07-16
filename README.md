@@ -1,40 +1,23 @@
-# markitdown-cosense
+# cosense-md
 
-A [MarkItDown](https://github.com/microsoft/markitdown) plugin that converts Cosense notation into Markdown.
+Convert [Cosense](https://scrapbox.io/) notation to Markdown. A single Rust conversion core drives every frontend, so all frontends stay in lockstep.
 
-## Features
-- Headings: `[* Heading]` → `# Heading`
-- Text styles: `[/ italic]`, `[** bold]`, `[*/ strong italic]`, `[- strikethrough]`
-- Lists: indented bullets using spaces, tabs, or full-width spaces
-- Code blocks: `code:language` and fenced ``` ``` sections
-- Tables: `table:Title` directives with indented rows
-- Links & media: `[Label https://example]`, `[img https://.../image.png]`
-- Math: `code:tex` blocks and lightweight inline detection
-- Tags: `[tag]` → `<!-- tag: tag -->`
+## Layout
 
-## Installation
-```bash
-pip install markitdown markitdown-cosense
-```
+| Path | What |
+|---|---|
+| [`crates/cosense-core`](crates/cosense-core) | The conversion engine (Cosense → Markdown). Pure Rust, no bindings. |
+| [`crates/cosense-wasm`](crates/cosense-wasm) | wasm-bindgen shim over the core, used by the web preview. |
+| [`markitdown-cosense`](markitdown-cosense) | The PyPI package: a [MarkItDown](https://github.com/microsoft/markitdown) plugin wrapping the core via PyO3. |
+| [`web`](web) | Browser live preview built on the wasm module. |
+| [`fixtures`](fixtures) | Language-neutral `{source, expected}` golden tables — the single source of truth exercised by both the Rust conformance suite and the Python tests. |
 
-## CLI
-```bash
-markitdown --use-plugins note.txt > note.md
-```
+## Development
 
-## Python
-```python
-from markitdown import MarkItDown, StreamInfo
-from markitdown_cosense import register_converters
-
-md = MarkItDown()
-register_converters(md)
-
-with open("note.txt", "rb") as fh:
-    result = md.convert_stream(fh, stream_info=StreamInfo(extension=".txt"))
-
-print(result.text_content)
-```
+- Rust core: `cargo test -p cosense-core` (golden conformance + property tests).
+- Python plugin: see [`markitdown-cosense/README.md`](markitdown-cosense/README.md).
+- Web preview: see [`web/README.md`](web/README.md).
 
 ## License
+
 MIT © kazu728

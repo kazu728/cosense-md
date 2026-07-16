@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=61", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["maturin>=1.7,<2.0"]
+build-backend = "maturin"
 
 [project]
 name = "markitdown-cosense"
-version = "0.2.0"
+version = "0.3.0"
 description = "A markitdown plugin for converting Cosense notation to Markdown"
 readme = "README.md"
 license = {text = "MIT"}
@@ -24,14 +24,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
-]
-
-[project.optional-dependencies]
-dev = [
-    "pytest>=8.3.5",
-    "pytest-cov>=4.0.0",
-    "ruff>=0.11.12",
-    "pyright>=1.1.390",
+    "Programming Language :: Python :: 3.13",
 ]
 
 [project.urls]
@@ -42,31 +35,39 @@ Issues = "https://github.com/kazu728/markitdown-cosense/issues"
 [project.entry-points."markitdown.plugin"]
 markitdown-cosense = "markitdown_cosense"
 
-[tool.uv]
-dev-dependencies = ["markitdown-cosense[dev]"]
+[dependency-groups]
+dev = [
+    "pytest>=8.3.5",
+    "pytest-cov>=4.0.0",
+    "ruff>=0.11.12",
+    "pyright>=1.1.390",
+    "maturin>=1.7,<2.0",
+]
 
 [tool.pyright]
-include = ["src"]
-exclude = ["**/node_modules", "**/__pycache__", "**/.*"]
+include = ["python"]
 pythonVersion = "3.10"
 pythonPlatform = "All"
 typeCheckingMode = "basic"
-useLibraryCodeForTypes = true
-reportMissingImports = "warning"
-reportMissingTypeStubs = false
-reportImportCycles = "error"
-reportUnusedImport = "warning"
 reportUnusedClass = "warning"
 reportUnusedFunction = "warning"
-reportUnusedVariable = "warning"
 
 
-[tool.setuptools.packages.find]
-where = ["src"]
+[tool.maturin]
+# Mixed layout: the Python package (accepts/stream glue) lives in python/, and
+# the compiled Rust core is placed at markitdown_cosense._core. All conversion
+# logic is in the Rust core; the Python side is glue plus the compiled module.
+# manifest-path defaults to the Cargo.toml beside this file (the cosense-py crate).
+python-source = "python"
+module-name = "markitdown_cosense._core"
 
 [tool.pytest.ini_options]
-pythonpath = ["src"]
 testpaths = ["tests/unit", "tests/integration"]
+
+[tool.ruff]
+# The Python package lives in python/ (Rust source occupies src/), so point ruff's
+# first-party detection there — otherwise markitdown_cosense reads as third-party.
+src = ["python"]
 
 [tool.ruff.lint]
 select = [
@@ -74,7 +75,3 @@ select = [
     "F",   # pyflakes
     "UP",  # pyupgrade
 ]
-
-[tool.ruff.format]
-quote-style = "double"
-indent-style = "space"
