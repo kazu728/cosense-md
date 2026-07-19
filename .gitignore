@@ -67,8 +67,9 @@ Thumbs.db
 /target/
 **/*.rs.bk
 
-# Generated wasm package for the web preview (rebuild with web/README.md)
+# Generated wasm packages (rebuild with web/README.md / extension/README.md)
 /web/pkg/
+/extension/pkg/
 
 # Project specific
 *.log
