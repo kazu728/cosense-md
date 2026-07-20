@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <title>Cosense Markdown</title>
+    <style>
+      :root { color-scheme: light dark; --border: #d0d7de; --bg-raw: #f6f8fa; }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; margin: 0; }
+      body { display: flex; flex-direction: column; font: 13px/1.6 system-ui, sans-serif; }
+      header {
+        display: flex;
+        justify-content: flex-end;
+        padding: 0.4rem 0.5rem;
+        border-bottom: 1px solid var(--border);
+      }
+      #copy {
+        padding: 0.2rem 0.7rem;
+        font: inherit;
+        cursor: pointer;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: none;
+        color: inherit;
+      }
+      #markdown {
+        flex: 1;
+        border: 0;
+        padding: 0.8rem;
+        resize: none;
+        background: var(--bg-raw);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 12px;
+      }
+      #markdown:focus { outline: none; }
+      #placeholder { flex: 1; margin: 0; padding: 1rem; color: gray; }
+    </style>
+  </head>
+  <body>
+    <header><button id="copy" type="button" hidden>コピー</button></header>
+    <textarea id="markdown" readonly spellcheck="false" aria-label="変換後 Markdown" hidden></textarea>
+    <p id="placeholder">scrapbox.io のページを開いてください（開いている場合はタブを再読み込み）</p>
+    <script type="module" src="panel.js"></script>
+  </body>
+</html>

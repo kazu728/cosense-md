@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "Cosense Markdown Panel",
+  "version": "0.1.0",
+  "minimum_chrome_version": "114",
+  "description": "Cosense のページを Markdown に変換して Side Panel に表示する",
+  "permissions": ["sidePanel"],
+  "action": {},
+  "side_panel": { "default_path": "panel.html" },
+  "background": { "service_worker": "background.js" },
+  "content_scripts": [
+    {
+      "matches": ["https://scrapbox.io/*"],
+      "js": ["content-main.js"],
+      "world": "MAIN"
+    },
+    {
+      "matches": ["https://scrapbox.io/*"],
+      "js": ["content-bridge.js"]
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+  }
+}
