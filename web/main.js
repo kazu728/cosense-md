@@ -45,7 +45,7 @@ const copyLabel = copy.textContent;
 let copyResetTimer;
 copy.addEventListener("click", async () => {
   await navigator.clipboard.writeText(markdown.value);
-  copy.textContent = "コピーしました";
+  copy.textContent = "Copied";
   clearTimeout(copyResetTimer);
   copyResetTimer = setTimeout(() => { copy.textContent = copyLabel; }, 1200);
 });

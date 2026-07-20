@@ -6,9 +6,9 @@ import init, { convert } from "./pkg/cosense_wasm.js";
 
 const PORT = "cosense-markdown-panel";
 const SCROLL_TYPE = "cosense-markdown-panel:scroll";
-const HINT_CLOSED = "scrapbox.io のページを開いてください（開いている場合はタブを再読み込み）";
-const HINT_EMPTY = "このページに表示できる本文がありません";
-const ERROR_LOAD = "変換モジュールの読み込みに失敗しました。拡張機能を再読み込みしてください。";
+const HINT_CLOSED = "Open a scrapbox.io page (reload the tab if one is already open)";
+const HINT_EMPTY = "This page has no body content to show";
+const ERROR_LOAD = "Failed to load the conversion module. Reload the extension.";
 
 const markdown = document.getElementById("markdown");
 const placeholder = document.getElementById("placeholder");
@@ -86,9 +86,9 @@ let copyResetTimer;
 copy.addEventListener("click", async () => {
   try {
     await navigator.clipboard.writeText(markdown.value);
-    copy.textContent = "コピーしました";
+    copy.textContent = "Copied";
   } catch {
-    copy.textContent = "コピーできませんでした";
+    copy.textContent = "Copy failed";
   }
   clearTimeout(copyResetTimer);
   copyResetTimer = setTimeout(() => { copy.textContent = copyLabel; }, 1200);

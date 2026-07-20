@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Cosense ライブプレビュー</title>
+    <title>Cosense Live Preview</title>
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/katex.min.css"
@@ -93,18 +93,18 @@
   </head>
   <body>
     <header>
-      <h1>Cosense ライブプレビュー</h1>
+      <h1>Cosense Live Preview</h1>
     </header>
     <main>
       <div class="pane">
-        <textarea id="input" spellcheck="false" aria-label="Cosense 入力">
-[* Cosense ライブプレビュー]
-[/ italic] と [[bold]] と [- strike] と [*/ strong italic]
-[tag] と [Google https://google.com]
+        <textarea id="input" spellcheck="false" aria-label="Cosense input">
+[* Cosense Live Preview]
+[/ italic] and [[bold]] and [- strike] and [*/ strong italic]
+[tag] and [Google https://google.com]
 
- リスト1
-  ネスト
- リスト2
+ List 1
+  Nested
+ List 2
 
 code:python
  def hello():
@@ -121,13 +121,13 @@ table:Data
       </div>
       <div class="pane preview-pane">
         <div class="tabs" role="tablist">
-          <button id="tab-preview" class="tab" role="tab" aria-selected="true" aria-controls="preview">プレビュー</button>
+          <button id="tab-preview" class="tab" role="tab" aria-selected="true" aria-controls="preview">Preview</button>
           <button id="tab-markdown" class="tab" role="tab" aria-selected="false" aria-controls="markdown">Markdown</button>
-          <button id="copy" type="button" hidden>コピー</button>
+          <button id="copy" type="button" hidden>Copy</button>
         </div>
         <div class="tab-body">
           <div id="preview" class="preview" role="tabpanel"></div>
-          <textarea id="markdown" role="tabpanel" readonly spellcheck="false" aria-label="変換後 Markdown" hidden></textarea>
+          <textarea id="markdown" role="tabpanel" readonly spellcheck="false" aria-label="Converted Markdown" hidden></textarea>
         </div>
       </div>
     </main>
