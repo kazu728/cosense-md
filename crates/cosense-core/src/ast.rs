@@ -34,18 +34,7 @@ pub struct ListItem {
 #[derive(Debug)]
 pub enum ItemContent {
     Text(String),
-    Code {
-        language: String,
-        lines: Vec<String>,
-    },
-    Math {
-        lines: Vec<String>,
-    },
-}
-
-#[derive(Debug)]
-pub struct Document {
-    pub blocks: Vec<Block>,
+    Block(Block),
 }
 
 #[derive(Debug)]

@@ -1,4 +1,4 @@
-use crate::ast::{Block, Document, ItemContent, ListItem};
+use crate::ast::{Block, ItemContent, ListItem};
 
 const CODE_DIRECTIVE: &str = "code:";
 const TABLE_DIRECTIVE: &str = "table:";
@@ -81,7 +81,7 @@ fn char_substr_from(s: &str, char_start: usize) -> &str {
     }
 }
 
-pub fn parse(text: &str) -> Document {
+pub fn parse(text: &str) -> Vec<Block> {
     let tokens = tokenize(text);
     let mut blocks: Vec<Block> = Vec::new();
     let mut paragraph: Vec<String> = Vec::new();
@@ -139,7 +139,7 @@ pub fn parse(text: &str) -> Document {
         }
     }
     flush_paragraph(&mut paragraph, &mut blocks);
-    Document { blocks }
+    blocks
 }
 
 fn flush_paragraph(paragraph: &mut Vec<String>, blocks: &mut Vec<Block>) {
@@ -154,17 +154,16 @@ fn tokenize(text: &str) -> Vec<Token> {
     let mut tokens = Vec::new();
     for line in text.lines() {
         let raw = line.to_string();
-        let indent = leading_ws(&raw);
-        let stripped = char_substr_from(&raw, indent);
-
-        if stripped.trim().is_empty() {
+        if raw.trim().is_empty() {
             tokens.push(Token {
                 raw,
-                indent,
+                indent: 0,
                 kind: TokenKind::Blank,
             });
             continue;
         }
+        let indent = leading_ws(&raw);
+        let stripped = char_substr_from(&raw, indent);
         if let Some((level, heading, trailing)) = parse_heading(&raw) {
             let text = format!("{}{}", heading.trim(), trailing).trim().to_string();
             tokens.push(Token {
@@ -194,9 +193,7 @@ fn tokenize(text: &str) -> Vec<Token> {
             });
             continue;
         }
-        if indent == 0
-            && let Some(rest) = stripped.strip_prefix(TABLE_DIRECTIVE)
-        {
+        if let Some(rest) = stripped.strip_prefix(TABLE_DIRECTIVE) {
             let trimmed = rest.trim();
             let title = (!trimmed.is_empty()).then(|| trimmed.to_string());
             tokens.push(Token {
@@ -262,7 +259,7 @@ fn parse_table(tokens: &[Token], start: usize, title: Option<String>) -> Option<
     let mut i = start + 1;
     while i < tokens.len() {
         let current = &tokens[i];
-        if current.indent == 0 || current.is_blank() {
+        if current.indent == 0 {
             break;
         }
         rows.push(split_cells(current.content()));
@@ -294,7 +291,7 @@ fn parse_list(tokens: &[Token], start: usize) -> (Block, usize) {
     let mut i = start;
     while i < tokens.len() {
         let current = &tokens[i];
-        if current.indent == 0 || current.is_blank() {
+        if current.indent == 0 {
             break;
         }
         while ancestors.last().is_some_and(|&d| d >= current.indent) {
@@ -302,16 +299,11 @@ fn parse_list(tokens: &[Token], start: usize) -> (Block, usize) {
         }
         let level = ancestors.len();
         if let TokenKind::CodeDirective { descriptor } = &current.kind {
-            let (lines, next) = collect_code_body(tokens, i);
-            let content = if is_math_descriptor(descriptor) {
-                ItemContent::Math { lines }
-            } else {
-                ItemContent::Code {
-                    language: infer_language(descriptor),
-                    lines,
-                }
-            };
-            items.push(ListItem { level, content });
+            let (block, next) = parse_code_block(tokens, i, descriptor.clone());
+            items.push(ListItem {
+                level,
+                content: ItemContent::Block(block),
+            });
             i = next;
             continue;
         }
@@ -349,11 +341,8 @@ fn is_math_descriptor(descriptor: &str) -> bool {
 }
 
 fn infer_language(descriptor: &str) -> String {
-    if descriptor.is_empty() {
-        return String::new();
-    }
-    match descriptor.rsplit_once('.') {
-        Some((_, ext)) => ext.to_string(),
-        None => descriptor.to_string(),
-    }
+    descriptor
+        .rsplit_once('.')
+        .map_or(descriptor, |(_, ext)| ext)
+        .to_string()
 }

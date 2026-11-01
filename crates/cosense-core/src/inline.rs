@@ -24,9 +24,6 @@ pub fn parse_inline(line: &str) -> Vec<Inline> {
 }
 
 fn push_plain(plain: &mut String, out: &mut Vec<Inline>) {
-    if plain.is_empty() {
-        return;
-    }
     let text = std::mem::take(plain);
     let mut last = 0;
     let mut from = 0;

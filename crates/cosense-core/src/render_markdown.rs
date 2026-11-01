@@ -1,11 +1,8 @@
-use crate::ast::{Block, Document, Emphasis, Inline, ItemContent, ListItem};
+use crate::ast::{Block, Emphasis, Inline, ItemContent, ListItem};
 use crate::inline::parse_inline;
 
-pub fn render_markdown(document: &Document) -> String {
-    let mut lines: Vec<String> = Vec::new();
-    for block in &document.blocks {
-        lines.extend(render_block(block));
-    }
+pub fn render_markdown(blocks: &[Block]) -> String {
+    let lines: Vec<String> = blocks.iter().flat_map(render_block).collect();
     lines.join("\n").trim_matches('\n').to_string()
 }
 
@@ -21,8 +18,8 @@ fn render_block(block: &Block) -> Vec<String> {
         }
         Block::Paragraph { lines } => lines.iter().map(|line| render_inline(line)).collect(),
         Block::BlankLine => vec![String::new()],
-        Block::Code { language, lines } => render_code(language, lines, ""),
-        Block::Math { lines } => render_math(lines, ""),
+        Block::Code { language, lines } => fenced(format!("```{language}"), lines, "```"),
+        Block::Math { lines } => fenced("$$".to_string(), lines, "$$"),
         Block::BulletList { items } => render_list(items),
         Block::Table {
             title,
@@ -32,22 +29,10 @@ fn render_block(block: &Block) -> Vec<String> {
     }
 }
 
-fn render_code(language: &str, lines: &[String], indent: &str) -> Vec<String> {
-    let fence = if language.is_empty() {
-        "```".to_string()
-    } else {
-        format!("```{language}")
-    };
-    let mut body = vec![format!("{indent}{fence}")];
-    body.extend(lines.iter().map(|line| format!("{indent}{line}")));
-    body.push(format!("{indent}```"));
-    body
-}
-
-fn render_math(lines: &[String], indent: &str) -> Vec<String> {
-    let mut body = vec![format!("{indent}$$")];
-    body.extend(lines.iter().map(|line| format!("{indent}{line}")));
-    body.push(format!("{indent}$$"));
+fn fenced(open: String, lines: &[String], close: &str) -> Vec<String> {
+    let mut body = vec![open];
+    body.extend(lines.iter().cloned());
+    body.push(close.to_string());
     body
 }
 
@@ -57,11 +42,11 @@ fn render_list(items: &[ListItem]) -> Vec<String> {
         let indent = "  ".repeat(item.level);
         match &item.content {
             ItemContent::Text(text) => lines.push(format!("{indent}- {}", render_inline(text))),
-            ItemContent::Code {
-                language,
-                lines: body,
-            } => lines.extend(render_code(language, body, &indent)),
-            ItemContent::Math { lines: body } => lines.extend(render_math(body, &indent)),
+            ItemContent::Block(block) => lines.extend(
+                render_block(block)
+                    .into_iter()
+                    .map(|line| format!("{indent}{line}")),
+            ),
         }
     }
     lines
