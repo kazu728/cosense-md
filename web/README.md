@@ -6,7 +6,7 @@ A static page that converts Cosense to Markdown in the browser and previews it i
 
 ```bash
 # 0. First time only: the wasm-bindgen CLI (same version as the crate)
-cargo install wasm-bindgen-cli --version 0.2.126
+cargo install wasm-bindgen-cli --version 0.2.130
 
 # 1. Package the wasm for the browser (generates web/pkg/)
 cargo build -p cosense-wasm --target wasm32-unknown-unknown --release
