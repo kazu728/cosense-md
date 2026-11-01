@@ -1,10 +1,10 @@
 [build-system]
-requires = ["maturin>=1.7,<2.0"]
+requires = ["maturin>=1.16,<2.0"]
 build-backend = "maturin"
 
 [project]
 name = "markitdown-cosense"
-version = "0.3.0"
+dynamic = ["version"]
 description = "A markitdown plugin for converting Cosense notation to Markdown"
 readme = "README.md"
 license = {text = "MIT"}
@@ -14,7 +14,7 @@ authors = [
 keywords = ["markitdown", "cosense", "markdown", "converter", "plugin"]
 requires-python = ">=3.10"
 dependencies = [
-    "markitdown>=0.1.1",
+    "markitdown>=0.1.9",
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -25,33 +25,29 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
 
 [project.urls]
-Homepage = "https://github.com/kazu728/markitdown-cosense"
-Repository = "https://github.com/kazu728/markitdown-cosense"
-Issues = "https://github.com/kazu728/markitdown-cosense/issues"
+Homepage = "https://github.com/kazu728/cosense-md"
+Repository = "https://github.com/kazu728/cosense-md"
+Issues = "https://github.com/kazu728/cosense-md/issues"
 
 [project.entry-points."markitdown.plugin"]
 markitdown-cosense = "markitdown_cosense"
 
 [dependency-groups]
 dev = [
-    "pytest>=8.3.5",
-    "pytest-cov>=4.0.0",
-    "ruff>=0.11.12",
-    "pyright>=1.1.390",
-    "maturin>=1.7,<2.0",
+    "pytest>=9.2.0",
+    "ruff>=0.17.3",
+    "pyright>=1.1.414",
+    "maturin>=1.16,<2.0",
 ]
 
 [tool.pyright]
 include = ["python"]
 pythonVersion = "3.10"
 pythonPlatform = "All"
-typeCheckingMode = "basic"
-reportUnusedClass = "warning"
-reportUnusedFunction = "warning"
-
 
 [tool.maturin]
 # Mixed layout: the Python package (accepts/stream glue) lives in python/, and
@@ -61,8 +57,21 @@ reportUnusedFunction = "warning"
 python-source = "python"
 module-name = "markitdown_cosense._core"
 
+[tool.uv]
+# uv only rebuilds a local project when pyproject.toml changes by default; list
+# the Rust sources too so `uv run pytest` never tests a stale compiled core.
+cache-keys = [
+    { file = "pyproject.toml" },
+    { file = "Cargo.toml" },
+    { file = "src/**/*.rs" },
+    { file = "../Cargo.toml" },
+    { file = "../Cargo.lock" },
+    { file = "../crates/cosense-core/Cargo.toml" },
+    { file = "../crates/cosense-core/src/**/*.rs" },
+]
+
 [tool.pytest.ini_options]
-testpaths = ["tests/unit", "tests/integration"]
+testpaths = ["tests"]
 
 [tool.ruff]
 # The Python package lives in python/ (Rust source occupies src/), so point ruff's
@@ -70,8 +79,7 @@ testpaths = ["tests/unit", "tests/integration"]
 src = ["python"]
 
 [tool.ruff.lint]
-select = [
+extend-select = [
     "I",   # isort
-    "F",   # pyflakes
     "UP",  # pyupgrade
 ]

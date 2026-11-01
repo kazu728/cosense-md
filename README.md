@@ -15,7 +15,7 @@ Convert [Cosense](https://scrapbox.io/) notation to Markdown. A single Rust conv
 ## Development
 
 - Rust core: `cargo test -p cosense-core` (golden conformance + property tests).
-- Python plugin: see [`markitdown-cosense/README.md`](markitdown-cosense/README.md).
+- Python plugin: `uv run pytest` in `markitdown-cosense/` (builds the PyO3 module and rebuilds it when Rust sources change).
 - Web preview: see [`web/README.md`](web/README.md).
 
 ## License
