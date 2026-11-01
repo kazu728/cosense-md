@@ -7,26 +7,24 @@
 //! verbatim as `Inline::Unknown`.
 
 use crate::ast::{Emphasis, Inline};
-use regex::Regex;
-use std::sync::LazyLock;
 
-pub const IMAGE_EXTENSIONS: [&str; 6] = ["png", "jpg", "jpeg", "gif", "svg", "webp"];
+const IMAGE_EXTENSIONS: [&str; 6] = ["png", "jpg", "jpeg", "gif", "svg", "webp"];
 
-static URL_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r#"https?://[^\s<>"'\]]+"#).unwrap());
-
-pub fn parse_inline(text: &str) -> Vec<Inline> {
+/// Parse one source line. Cosense is line-oriented, so a span never crosses a
+/// line boundary and callers never pass a newline.
+pub fn parse_inline(line: &str) -> Vec<Inline> {
     let mut result = Vec::new();
     let mut plain = String::new();
-    let mut rest = text;
+    let mut rest = line;
 
     while !rest.is_empty() {
-        if rest.starts_with('[') {
-            if let Some((inline, consumed)) = try_bracket(rest) {
-                push_plain(&mut plain, &mut result);
-                result.push(inline);
-                rest = &rest[consumed..];
-                continue;
-            }
+        if rest.starts_with('[')
+            && let Some((inline, consumed)) = try_bracket(rest)
+        {
+            push_plain(&mut plain, &mut result);
+            result.push(inline);
+            rest = &rest[consumed..];
+            continue;
         }
         match rest.chars().next() {
             Some(ch) => {
@@ -49,51 +47,74 @@ fn push_plain(plain: &mut String, out: &mut Vec<Inline>) {
     }
     let text = std::mem::take(plain);
     let mut last = 0;
-    for m in URL_RE.find_iter(&text) {
-        let preceded = text[..m.start()].chars().next_back();
+    let mut from = 0;
+    while let Some((start, end)) = next_url(&text, from) {
+        from = end;
+        let preceded = text[..start].chars().next_back();
         if matches!(preceded, Some('<') | Some('(')) {
             continue;
         }
-        if m.start() > last {
-            out.push(Inline::Text(text[last..m.start()].to_string()));
+        if start > last {
+            out.push(Inline::Text(text[last..start].to_string()));
         }
-        out.push(Inline::AutoLink(m.as_str().to_string()));
-        last = m.end();
+        out.push(Inline::AutoLink(text[start..end].to_string()));
+        last = end;
     }
     if last < text.len() {
         out.push(Inline::Text(text[last..].to_string()));
     }
 }
 
-/// Parse one bracket span starting at `rest[0] == '['`. Returns the node and the
-/// number of bytes consumed, or `None` when the `[` is not the start of a span
-/// we own: no closing `]`, an inner that crosses a line boundary (Cosense is
-/// line-oriented, so a bracket never spans lines), or an existing markdown link
-/// `[label](url)`.
-fn try_bracket(rest: &str) -> Option<(Inline, usize)> {
-    if let Some(after) = rest.strip_prefix("[[") {
-        if let Some(close) = after.find("]]") {
-            let inner = &after[..close];
-            if !inner.contains('\n') {
-                return Some((
-                    Inline::Emphasis(Emphasis {
-                        bold: true,
-                        italic: false,
-                        strike: false,
-                        text: inner.to_string(),
-                    }),
-                    close + 4, // "[[" + inner + "]]"
-                ));
+/// Byte range of the first `http(s)://…` URL at or after `from`. The URL runs
+/// until whitespace or one of `< > " ' ]`, and needs at least one character
+/// after the scheme.
+fn next_url(text: &str, from: usize) -> Option<(usize, usize)> {
+    let mut search = from;
+    while let Some(offset) = text[search..].find("http") {
+        let start = search + offset;
+        let after_http = &text[start + "http".len()..];
+        let scheme = if after_http.starts_with("s://") {
+            "https://".len()
+        } else if after_http.starts_with("://") {
+            "http://".len()
+        } else {
+            0
+        };
+        if scheme > 0 {
+            let body = &text[start + scheme..];
+            let len = body
+                .find(|c: char| c.is_whitespace() || matches!(c, '<' | '>' | '"' | '\'' | ']'))
+                .unwrap_or(body.len());
+            if len > 0 {
+                return Some((start, start + scheme + len));
             }
         }
+        search = start + 1;
+    }
+    None
+}
+
+/// Parse one bracket span starting at `rest[0] == '['`. Returns the node and the
+/// number of bytes consumed, or `None` when the `[` is not the start of a span
+/// we own: no closing `]`, or an existing markdown link `[label](url)`.
+fn try_bracket(rest: &str) -> Option<(Inline, usize)> {
+    if let Some(after) = rest.strip_prefix("[[")
+        && let Some(close) = after.find("]]")
+    {
+        return Some((
+            Inline::Emphasis(Emphasis {
+                bold: true,
+                italic: false,
+                strike: false,
+                text: after[..close].to_string(),
+            }),
+            close + 4, // "[[" + inner + "]]"
+        ));
     }
 
     let after_open = &rest[1..];
     let close = after_open.find(']')?;
     let inner = &after_open[..close];
-    if inner.contains('\n') {
-        return None;
-    }
     let consumed = close + 2; // "[" + inner + "]"
 
     if rest[consumed..].starts_with('(') {
@@ -147,15 +168,15 @@ fn decoration(inner: &str) -> Option<Emphasis> {
         ("-", false, false, true),
     ];
     for (marker, bold, italic, strike) in MARKERS {
-        if let Some(after) = inner.strip_prefix(marker) {
-            if after.starts_with(|c: char| c.is_whitespace()) {
-                return Some(Emphasis {
-                    bold,
-                    italic,
-                    strike,
-                    text: after.trim_start().to_string(),
-                });
-            }
+        if let Some(after) = inner.strip_prefix(marker)
+            && after.starts_with(|c: char| c.is_whitespace())
+        {
+            return Some(Emphasis {
+                bold,
+                italic,
+                strike,
+                text: after.trim_start().to_string(),
+            });
         }
     }
     None
@@ -187,21 +208,21 @@ fn url_bracket(inner: &str) -> Option<Inline> {
             }
         }
         [first, rest @ ..] if !rest.is_empty() => {
-            if *first == "YouTube" {
-                if let Some(url) = parts.iter().find(|p| is_http_url(p) && is_youtube(p)) {
-                    return Some(Inline::Link {
-                        label: "YouTube Video".to_string(),
-                        url: (*url).to_string(),
-                    });
-                }
+            if *first == "YouTube"
+                && let Some(url) = parts.iter().find(|p| is_http_url(p) && is_youtube(p))
+            {
+                return Some(Inline::Link {
+                    label: "YouTube Video".to_string(),
+                    url: (*url).to_string(),
+                });
             }
-            if *first == "Twitter" {
-                if let Some(url) = parts.iter().find(|p| is_http_url(p) && is_twitter(p)) {
-                    return Some(Inline::Link {
-                        label: "Twitter Post".to_string(),
-                        url: (*url).to_string(),
-                    });
-                }
+            if *first == "Twitter"
+                && let Some(url) = parts.iter().find(|p| is_http_url(p) && is_twitter(p))
+            {
+                return Some(Inline::Link {
+                    label: "Twitter Post".to_string(),
+                    url: (*url).to_string(),
+                });
             }
 
             let last = parts[parts.len() - 1];

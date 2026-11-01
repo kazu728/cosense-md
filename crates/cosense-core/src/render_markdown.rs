@@ -21,10 +21,7 @@ fn render_block(block: &Block) -> Vec<String> {
                     .to_string(),
             ]
         }
-        Block::Paragraph { text } => render_inline(text)
-            .split('\n')
-            .map(str::to_string)
-            .collect(),
+        Block::Paragraph { lines } => lines.iter().map(|line| render_inline(line)).collect(),
         Block::BlankLine => vec![String::new()],
         Block::Code {
             language,

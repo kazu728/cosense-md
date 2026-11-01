@@ -4,11 +4,6 @@
 //! and multibyte content never split a UTF-8 boundary.
 
 use crate::ast::{Block, Document, ItemContent, ListItem};
-use regex::Regex;
-use std::sync::LazyLock;
-
-static HEADING_RE: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"^\[(\*{1,5})\s+(.*?)\]").unwrap());
 
 const CODE_DIRECTIVE: &str = "code:";
 const TABLE_DIRECTIVE: &str = "table:";
@@ -16,7 +11,7 @@ const FENCE: &str = "```";
 
 /// Bracket-form markers a detector can spot without a full parse: the inline
 /// decorations and the media directives. Heading brackets are covered by
-/// `HEADING_RE`, and `code:` / `table:` by the directive constants above.
+/// `parse_heading`, and `code:` / `table:` by the directive constants above.
 const DETECT_BRACKET_MARKERS: [&str; 8] = [
     "[*/",
     "[*-",
@@ -36,13 +31,29 @@ pub fn looks_like_cosense(text: &str) -> bool {
     text.lines().any(|line| {
         let line = line.trim();
         !line.is_empty()
-            && (HEADING_RE.is_match(line)
+            && (parse_heading(line).is_some()
                 || line.starts_with(CODE_DIRECTIVE)
                 || line.starts_with(TABLE_DIRECTIVE)
                 || DETECT_BRACKET_MARKERS
                     .iter()
                     .any(|marker| line.starts_with(marker)))
     })
+}
+
+/// `[* text]` … `[***** text]` at the start of `line`: the star count (the
+/// heading level), the bracketed text, and whatever follows the closing `]`.
+fn parse_heading(line: &str) -> Option<(usize, &str, &str)> {
+    let rest = line.strip_prefix('[')?;
+    let level = rest.chars().take_while(|&c| c == '*').count();
+    if !(1..=5).contains(&level) {
+        return None;
+    }
+    let rest = &rest[level..];
+    if !rest.starts_with(char::is_whitespace) {
+        return None;
+    }
+    let (text, trailing) = rest.split_once(']')?;
+    Some((level, text, trailing))
 }
 
 #[derive(Debug, Clone)]
@@ -152,9 +163,8 @@ pub fn parse(text: &str) -> Document {
 fn flush_paragraph(paragraph: &mut Vec<String>, blocks: &mut Vec<Block>) {
     if !paragraph.is_empty() {
         blocks.push(Block::Paragraph {
-            text: paragraph.join("\n"),
+            lines: std::mem::take(paragraph),
         });
-        paragraph.clear();
     }
 }
 
@@ -176,11 +186,7 @@ fn tokenize(text: &str) -> Vec<Token> {
             });
             continue;
         }
-        if let Some(caps) = HEADING_RE.captures(&raw) {
-            let level = caps.get(1).map_or(0, |m| m.as_str().chars().count());
-            let heading = caps.get(2).map_or("", |m| m.as_str());
-            let end = caps.get(0).map_or(0, |m| m.end());
-            let trailing = &raw[end..];
+        if let Some((level, heading, trailing)) = parse_heading(&raw) {
             let text = format!("{}{}", heading.trim(), trailing).trim().to_string();
             tokens.push(Token {
                 raw,
@@ -207,17 +213,17 @@ fn tokenize(text: &str) -> Vec<Token> {
             });
             continue;
         }
-        if indent == 0 {
-            if let Some(rest) = stripped.strip_prefix(TABLE_DIRECTIVE) {
-                let trimmed = rest.trim();
-                let title = (!trimmed.is_empty()).then(|| trimmed.to_string());
-                tokens.push(Token {
-                    raw,
-                    indent,
-                    kind: TokenKind::TableDirective { title },
-                });
-                continue;
-            }
+        if indent == 0
+            && let Some(rest) = stripped.strip_prefix(TABLE_DIRECTIVE)
+        {
+            let trimmed = rest.trim();
+            let title = (!trimmed.is_empty()).then(|| trimmed.to_string());
+            tokens.push(Token {
+                raw,
+                indent,
+                kind: TokenKind::TableDirective { title },
+            });
+            continue;
         }
         tokens.push(Token {
             raw,

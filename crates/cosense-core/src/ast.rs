@@ -1,9 +1,9 @@
 //! Target-independent syntax tree for Cosense documents.
 //!
-//! Blocks mirror the two-phase parser design (tokenizer → match → AST). Inline
-//! content is itself an AST: `[...]` spans are classified once into typed nodes
-//! so that each output target renders them by walking the tree, rather than by
-//! re-running ordered regex substitutions.
+//! Blocks mirror the two-phase parser design (tokenizer → match → AST) and keep
+//! their inline text as single source lines. The renderer classifies each line's
+//! `[...]` spans into typed `Inline` nodes and walks them, rather than re-running
+//! ordered regex substitutions.
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Block {
@@ -12,7 +12,7 @@ pub enum Block {
         text: String,
     },
     Paragraph {
-        text: String,
+        lines: Vec<String>,
     },
     BlankLine,
     Code {
