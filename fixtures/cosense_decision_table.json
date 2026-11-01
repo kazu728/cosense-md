@@ -202,6 +202,21 @@
       "expected": ["- item", "  ```python", "  print('hi')", "  ```"]
     },
     {
+      "id": "indented_code_block_before_first_item",
+      "source": [" code:py", "  x = 1", " item"],
+      "expected": ["```py", "x = 1", "```", "- item"]
+    },
+    {
+      "id": "tab_indented_code_block",
+      "source": ["\tcode:py", "\t\tx = 1"],
+      "expected": ["```py", "x = 1", "```"]
+    },
+    {
+      "id": "indented_fence_is_list_text",
+      "source": [" ```js", " x"],
+      "expected": ["- ```js", "- x"]
+    },
+    {
       "id": "list_nested_math_block",
       "source": [" 分散", "  code:tex", "   V(X) = E((X-μ)^2)"],
       "expected": ["- 分散", "  $$", "  V(X) = E((X-μ)^2)", "  $$"]

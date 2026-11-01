@@ -11,11 +11,9 @@ pub enum Block {
     Code {
         language: String,
         lines: Vec<String>,
-        indent: String,
     },
     Math {
         lines: Vec<String>,
-        indent: String,
     },
     BulletList {
         items: Vec<ListItem>,

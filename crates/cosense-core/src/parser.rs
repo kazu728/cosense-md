@@ -81,10 +81,6 @@ fn char_substr_from(s: &str, char_start: usize) -> &str {
     }
 }
 
-fn first_chars(s: &str, n: usize) -> String {
-    s.chars().take(n).collect()
-}
-
 pub fn parse(text: &str) -> Document {
     let tokens = tokenize(text);
     let mut blocks: Vec<Block> = Vec::new();
@@ -98,6 +94,12 @@ pub fn parse(text: &str) -> Document {
                 flush_paragraph(&mut paragraph, &mut blocks);
                 blocks.push(Block::BlankLine);
                 i += 1;
+            }
+            _ if token.indent > 0 => {
+                flush_paragraph(&mut paragraph, &mut blocks);
+                let (block, next) = parse_list(&tokens, i);
+                blocks.push(block);
+                i = next;
             }
             TokenKind::Heading { level, text } => {
                 flush_paragraph(&mut paragraph, &mut blocks);
@@ -130,12 +132,6 @@ pub fn parse(text: &str) -> Document {
                     i += 1;
                 }
             },
-            TokenKind::Text if token.indent > 0 => {
-                flush_paragraph(&mut paragraph, &mut blocks);
-                let (block, next) = parse_list(&tokens, i);
-                blocks.push(block);
-                i = next;
-            }
             TokenKind::Text => {
                 paragraph.push(token.raw.clone());
                 i += 1;
@@ -178,7 +174,9 @@ fn tokenize(text: &str) -> Vec<Token> {
             });
             continue;
         }
-        if let Some(rest) = stripped.strip_prefix(FENCE) {
+        if indent == 0
+            && let Some(rest) = stripped.strip_prefix(FENCE)
+        {
             let language = rest.trim().to_string();
             tokens.push(Token {
                 raw,
@@ -218,55 +216,34 @@ fn tokenize(text: &str) -> Vec<Token> {
 }
 
 fn parse_fenced_code(tokens: &[Token], start: usize, language: String) -> (Block, usize) {
-    let start_token = &tokens[start];
-    let base_indent = start_token.indent;
-    let prefix = first_chars(&start_token.raw, base_indent);
-
-    let mut collected = Vec::new();
+    let mut lines = Vec::new();
     let mut i = start + 1;
     while i < tokens.len() {
         let current = &tokens[i];
-        if matches!(current.kind, TokenKind::Fence { .. }) && current.indent == base_indent {
-            i += 1;
+        i += 1;
+        if matches!(current.kind, TokenKind::Fence { .. }) {
             break;
         }
-        if current.raw.starts_with(&prefix) {
-            collected.push(char_substr_from(&current.raw, base_indent).to_string());
-        } else {
-            collected.push(current.raw.clone());
-        }
-        i += 1;
+        lines.push(current.raw.clone());
     }
-
-    (
-        Block::Code {
-            language,
-            lines: collected,
-            indent: prefix,
-        },
-        i,
-    )
+    (Block::Code { language, lines }, i)
 }
 
 fn parse_code_block(tokens: &[Token], start: usize, descriptor: String) -> (Block, usize) {
-    let (lines, indent, next) = collect_code_body(tokens, start);
+    let (lines, next) = collect_code_body(tokens, start);
     let block = if is_math_descriptor(&descriptor) {
-        Block::Math { lines, indent }
+        Block::Math { lines }
     } else {
         Block::Code {
             language: infer_language(&descriptor),
             lines,
-            indent,
         }
     };
     (block, next)
 }
 
-fn collect_code_body(tokens: &[Token], start: usize) -> (Vec<String>, String, usize) {
-    let directive = &tokens[start];
-    let base_indent = directive.indent;
-    let indent = first_chars(&directive.raw, base_indent);
-
+fn collect_code_body(tokens: &[Token], start: usize) -> (Vec<String>, usize) {
+    let base_indent = tokens[start].indent;
     let mut collected: Vec<String> = Vec::new();
     let mut i = start + 1;
     while let Some(offset) = tokens[i..].iter().position(|t| !t.is_blank())
@@ -277,7 +254,7 @@ fn collect_code_body(tokens: &[Token], start: usize) -> (Vec<String>, String, us
         i = end;
     }
 
-    (normalize_code_lines(&collected), indent, i)
+    (normalize_code_lines(&collected), i)
 }
 
 fn parse_table(tokens: &[Token], start: usize, title: Option<String>) -> Option<(Block, usize)> {
@@ -325,7 +302,7 @@ fn parse_list(tokens: &[Token], start: usize) -> (Block, usize) {
         }
         let level = ancestors.len();
         if let TokenKind::CodeDirective { descriptor } = &current.kind {
-            let (lines, _, next) = collect_code_body(tokens, i);
+            let (lines, next) = collect_code_body(tokens, i);
             let content = if is_math_descriptor(descriptor) {
                 ItemContent::Math { lines }
             } else {

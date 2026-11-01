@@ -21,12 +21,8 @@ fn render_block(block: &Block) -> Vec<String> {
         }
         Block::Paragraph { lines } => lines.iter().map(|line| render_inline(line)).collect(),
         Block::BlankLine => vec![String::new()],
-        Block::Code {
-            language,
-            lines,
-            indent,
-        } => render_code(language, lines, indent),
-        Block::Math { lines, indent } => render_math(lines, indent),
+        Block::Code { language, lines } => render_code(language, lines, ""),
+        Block::Math { lines } => render_math(lines, ""),
         Block::BulletList { items } => render_list(items),
         Block::Table {
             title,
