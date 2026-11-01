@@ -61,7 +61,7 @@ function start() {
 }
 
 function stop() {
-  watchers = Math.max(0, watchers - 1);
+  watchers -= 1;
   if (watchers > 0) return;
   observer?.disconnect();
   observer = undefined;

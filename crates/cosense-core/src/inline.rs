@@ -7,8 +7,8 @@ pub fn parse_inline(line: &str) -> Vec<Inline> {
     let mut plain = String::new();
     let mut rest = line;
 
-    while !rest.is_empty() {
-        if rest.starts_with('[')
+    while let Some(ch) = rest.chars().next() {
+        if ch == '['
             && let Some((inline, consumed)) = try_bracket(rest)
         {
             push_plain(&mut plain, &mut result);
@@ -16,13 +16,8 @@ pub fn parse_inline(line: &str) -> Vec<Inline> {
             rest = &rest[consumed..];
             continue;
         }
-        match rest.chars().next() {
-            Some(ch) => {
-                plain.push(ch);
-                rest = &rest[ch.len_utf8()..];
-            }
-            None => break,
-        }
+        plain.push(ch);
+        rest = &rest[ch.len_utf8()..];
     }
     push_plain(&mut plain, &mut result);
     result
@@ -117,7 +112,7 @@ fn classify_bracket(inner: &str) -> Inline {
     if is_tag(inner) {
         return Inline::Tag(inner.to_string());
     }
-    Inline::Unknown(format!("[{inner}]"))
+    Inline::Text(format!("[{inner}]"))
 }
 
 fn decoration(inner: &str) -> Option<Emphasis> {
@@ -181,7 +176,7 @@ fn url_bracket(inner: &str) -> Option<Inline> {
                 Some(Inline::AutoLink((*single).to_string()))
             }
         }
-        [first, rest @ ..] if !rest.is_empty() => {
+        [first, .., last] => {
             if *first == "YouTube"
                 && let Some(url) = parts.iter().find(|p| is_http_url(p) && is_youtube(p))
             {
@@ -199,24 +194,17 @@ fn url_bracket(inner: &str) -> Option<Inline> {
                 });
             }
 
-            let last = parts[parts.len() - 1];
             if is_http_url(last) {
-                let label = parts[..parts.len() - 1].join(" ");
-                if is_valid_label(&label) {
-                    return Some(Inline::Link {
-                        label,
-                        url: last.to_string(),
-                    });
-                }
+                return Some(Inline::Link {
+                    label: parts[..parts.len() - 1].join(" "),
+                    url: (*last).to_string(),
+                });
             }
             if is_http_url(first) {
-                let label = parts[1..].join(" ");
-                if is_valid_label(&label) {
-                    return Some(Inline::Link {
-                        label,
-                        url: (*first).to_string(),
-                    });
-                }
+                return Some(Inline::Link {
+                    label: parts[1..].join(" "),
+                    url: (*first).to_string(),
+                });
             }
             None
         }
@@ -241,10 +229,6 @@ fn is_youtube(url: &str) -> bool {
 
 fn is_twitter(url: &str) -> bool {
     (url.contains("twitter.com/") || url.contains("x.com/")) && url.contains("/status/")
-}
-
-fn is_valid_label(label: &str) -> bool {
-    !label.is_empty() && !label.chars().any(|c| matches!(c, '/' | '-' | '*' | ']'))
 }
 
 fn is_tag(inner: &str) -> bool {

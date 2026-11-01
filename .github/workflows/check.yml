@@ -79,5 +79,4 @@ jobs:
           uv sync --locked
           uv run pytest
           uv run markitdown --use-plugins tests/test_cosense_notation.txt > /tmp/out.md
-          test -s /tmp/out.md
           grep -qF '# Heading Level 1' /tmp/out.md

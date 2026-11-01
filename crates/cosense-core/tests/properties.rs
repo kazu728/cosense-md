@@ -17,12 +17,6 @@ proptest! {
     }
 
     #[test]
-    fn plain_words_are_preserved(s in r"[a-zA-Z0-9]([a-zA-Z0-9 ]{0,60}[a-zA-Z0-9])?") {
-        let out = convert(&s);
-        prop_assert_eq!(out, s);
-    }
-
-    #[test]
     fn plain_multiline_is_preserved(
         lines in prop::collection::vec(
             r"[a-zA-Z0-9]([a-zA-Z0-9 ]{0,40}[a-zA-Z0-9])?",

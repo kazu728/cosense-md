@@ -31,6 +31,11 @@
       "expected": ["[Label](https://example.com)"]
     },
     {
+      "id": "labeled_link_label_with_symbols",
+      "source": ["[my-site https://example.com] [https://example.com A/B test]"],
+      "expected": ["[my-site](https://example.com) [A/B test](https://example.com)"]
+    },
+    {
       "id": "bare_url_autolink",
       "source": ["Plain https://example.com text"],
       "expected": ["Plain <https://example.com> text"]
@@ -197,6 +202,21 @@
       "expected": ["- item", "  ```python", "  print('hi')", "  ```"]
     },
     {
+      "id": "indented_code_block_before_first_item",
+      "source": [" code:py", "  x = 1", " item"],
+      "expected": ["```py", "x = 1", "```", "- item"]
+    },
+    {
+      "id": "tab_indented_code_block",
+      "source": ["\tcode:py", "\t\tx = 1"],
+      "expected": ["```py", "x = 1", "```"]
+    },
+    {
+      "id": "indented_fence_is_list_text",
+      "source": [" ```js", " x"],
+      "expected": ["- ```js", "- x"]
+    },
+    {
       "id": "list_nested_math_block",
       "source": [" 分散", "  code:tex", "   V(X) = E((X-μ)^2)"],
       "expected": ["- 分散", "  $$", "  V(X) = E((X-μ)^2)", "  $$"]
@@ -227,6 +247,11 @@
       "id": "table_without_title",
       "source": ["table:", " A\tB", " 1\t2"],
       "expected": ["| A | B |", "|---|---|", "| 1 | 2 |"]
+    },
+    {
+      "id": "table_without_rows_passthrough",
+      "source": ["table:Empty", "next"],
+      "expected": ["table:Empty", "next"]
     },
     {
       "id": "table_multiword_cell_preserved",

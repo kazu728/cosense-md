@@ -21,12 +21,8 @@ fn render_block(block: &Block) -> Vec<String> {
         }
         Block::Paragraph { lines } => lines.iter().map(|line| render_inline(line)).collect(),
         Block::BlankLine => vec![String::new()],
-        Block::Code {
-            language,
-            lines,
-            indent,
-        } => render_code(language, lines, indent),
-        Block::Math { lines, indent } => render_math(lines, indent),
+        Block::Code { language, lines } => render_code(language, lines, ""),
+        Block::Math { lines } => render_math(lines, ""),
         Block::BulletList { items } => render_list(items),
         Block::Table {
             title,
@@ -60,11 +56,7 @@ fn render_list(items: &[ListItem]) -> Vec<String> {
     for item in items {
         let indent = "  ".repeat(item.level);
         match &item.content {
-            ItemContent::Text(text) => lines.push(
-                format!("{indent}- {}", render_inline(text))
-                    .trim_end()
-                    .to_string(),
-            ),
+            ItemContent::Text(text) => lines.push(format!("{indent}- {}", render_inline(text))),
             ItemContent::Code {
                 language,
                 lines: body,
@@ -112,7 +104,6 @@ fn render_inline(text: &str) -> String {
             Inline::Image { alt, url } => out.push_str(&format!("![{alt}]({url})")),
             Inline::Link { label, url } => out.push_str(&format!("[{label}]({url})")),
             Inline::AutoLink(url) => out.push_str(&format!("<{url}>")),
-            Inline::Unknown(raw) => out.push_str(&raw),
         }
     }
     out

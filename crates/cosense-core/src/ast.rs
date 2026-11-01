@@ -1,4 +1,4 @@
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug)]
 pub enum Block {
     Heading {
         level: usize,
@@ -11,11 +11,9 @@ pub enum Block {
     Code {
         language: String,
         lines: Vec<String>,
-        indent: String,
     },
     Math {
         lines: Vec<String>,
-        indent: String,
     },
     BulletList {
         items: Vec<ListItem>,
@@ -27,13 +25,13 @@ pub enum Block {
     },
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug)]
 pub struct ListItem {
     pub level: usize,
     pub content: ItemContent,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug)]
 pub enum ItemContent {
     Text(String),
     Code {
@@ -45,12 +43,12 @@ pub enum ItemContent {
     },
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug)]
 pub struct Document {
     pub blocks: Vec<Block>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug)]
 pub enum Inline {
     Text(String),
     Emphasis(Emphasis),
@@ -58,10 +56,9 @@ pub enum Inline {
     Image { alt: String, url: String },
     Link { label: String, url: String },
     AutoLink(String),
-    Unknown(String),
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug)]
 pub struct Emphasis {
     pub bold: bool,
     pub italic: bool,
