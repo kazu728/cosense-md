@@ -241,17 +241,20 @@ fn parse_code_block(tokens: &[Token], start: usize, descriptor: String) -> (Bloc
 
 fn collect_code_body(tokens: &[Token], start: usize) -> (Vec<String>, usize) {
     let base_indent = tokens[start].indent;
-    let mut collected: Vec<String> = Vec::new();
+    let mut lines: Vec<String> = Vec::new();
     let mut i = start + 1;
     while let Some(offset) = tokens[i..].iter().position(|t| !t.is_blank())
         && tokens[i + offset].indent > base_indent
     {
         let end = i + offset + 1;
-        collected.extend(tokens[i..end].iter().map(|t| t.raw.clone()));
+        lines.extend(
+            tokens[i..end]
+                .iter()
+                .map(|t| char_substr_from(&t.raw, base_indent + 1).to_string()),
+        );
         i = end;
     }
-
-    (normalize_code_lines(&collected), i)
+    (lines, i)
 }
 
 fn parse_table(tokens: &[Token], start: usize, title: Option<String>) -> Option<(Block, usize)> {
@@ -315,25 +318,6 @@ fn parse_list(tokens: &[Token], start: usize) -> (Block, usize) {
         i += 1;
     }
     (Block::BulletList { items }, i)
-}
-
-fn normalize_code_lines(lines: &[String]) -> Vec<String> {
-    let indent_width = lines
-        .iter()
-        .filter(|line| !line.trim().is_empty())
-        .map(|line| leading_ws(line))
-        .min()
-        .unwrap_or(0);
-    lines
-        .iter()
-        .map(|line| {
-            if line.trim().is_empty() {
-                String::new()
-            } else {
-                char_substr_from(line, indent_width).to_string()
-            }
-        })
-        .collect()
 }
 
 fn is_math_descriptor(descriptor: &str) -> bool {

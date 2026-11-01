@@ -197,6 +197,11 @@
       "expected": ["```py", "print('start')", "code: still code", "print('end')", "```"]
     },
     {
+      "id": "code_block_strips_one_level_past_directive",
+      "source": ["code:py", "  x = 1", "   y = 2"],
+      "expected": ["```py", " x = 1", "  y = 2", "```"]
+    },
+    {
       "id": "list_nested_code_block",
       "source": [" item", "  code:python", "   print('hi')"],
       "expected": ["- item", "  ```python", "  print('hi')", "  ```"]
