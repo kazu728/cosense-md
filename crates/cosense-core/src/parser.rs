@@ -119,14 +119,17 @@ pub fn parse(text: &str) -> Document {
                 blocks.push(block);
                 i = next;
             }
-            TokenKind::TableDirective { title } => {
-                flush_paragraph(&mut paragraph, &mut blocks);
-                let (block, next) = parse_table(&tokens, i, title.clone());
-                if let Some(block) = block {
+            TokenKind::TableDirective { title } => match parse_table(&tokens, i, title.clone()) {
+                Some((block, next)) => {
+                    flush_paragraph(&mut paragraph, &mut blocks);
                     blocks.push(block);
+                    i = next;
                 }
-                i = next;
-            }
+                None => {
+                    paragraph.push(token.raw.clone());
+                    i += 1;
+                }
+            },
             TokenKind::Text if token.indent > 0 => {
                 flush_paragraph(&mut paragraph, &mut blocks);
                 let (block, next) = parse_list(&tokens, i);
@@ -277,7 +280,7 @@ fn collect_code_body(tokens: &[Token], start: usize) -> (Vec<String>, String, us
     (normalize_code_lines(&collected), indent, i)
 }
 
-fn parse_table(tokens: &[Token], start: usize, title: Option<String>) -> (Option<Block>, usize) {
+fn parse_table(tokens: &[Token], start: usize, title: Option<String>) -> Option<(Block, usize)> {
     let mut rows: Vec<Vec<String>> = Vec::new();
     let mut i = start + 1;
     while i < tokens.len() {
@@ -289,18 +292,16 @@ fn parse_table(tokens: &[Token], start: usize, title: Option<String>) -> (Option
         i += 1;
     }
 
-    if rows.is_empty() {
-        return (None, i);
-    }
-    let header = rows.remove(0);
-    (
-        Some(Block::Table {
+    let mut rows = rows.into_iter();
+    let header = rows.next()?;
+    Some((
+        Block::Table {
             title,
             header,
-            rows,
-        }),
+            rows: rows.collect(),
+        },
         i,
-    )
+    ))
 }
 
 fn split_cells(content: &str) -> Vec<String> {

@@ -234,6 +234,11 @@
       "expected": ["| A | B |", "|---|---|", "| 1 | 2 |"]
     },
     {
+      "id": "table_without_rows_passthrough",
+      "source": ["table:Empty", "next"],
+      "expected": ["table:Empty", "next"]
+    },
+    {
       "id": "table_multiword_cell_preserved",
       "source": ["table:People", " Full Name\tAge", " Alice Smith\t20"],
       "expected": ["## People", "", "| Full Name | Age |", "|---|---|", "| Alice Smith | 20 |"]
