@@ -249,6 +249,16 @@
       "id": "link_bracket_does_not_fuse_across_newline",
       "source": ["[Label", "https://example.com]"],
       "expected": ["[Label", "<https://example.com>]"]
+    },
+    {
+      "id": "indented_non_indent_whitespace_is_blank",
+      "source": ["a", "  ", "b"],
+      "expected": ["a", "", "b"]
+    },
+    {
+      "id": "indented_bare_cr_is_blank",
+      "source": ["a", " \r"],
+      "expected": ["a"]
     }
   ],
   "indentation": [

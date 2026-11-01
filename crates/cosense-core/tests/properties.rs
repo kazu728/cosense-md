@@ -8,9 +8,11 @@ proptest! {
     #![proptest_config(ProptestConfig::with_cases(512))]
 
     /// Any string built from the cosense markup alphabet converts without panic.
+    /// The alphabet includes whitespace that is not an indent character (`\r`,
+    /// U+00A0), which once made an indented blank line loop forever.
     #[test]
     fn markup_input_never_panics(
-        s in r"[\[\]<>()/*#$~`\-_.:a-zA-Z0-9 \t\n　]{0,120}"
+        s in r"[\[\]<>()/*#$~`\-_.:a-zA-Z0-9 \t\n\r　\u{a0}]{0,120}"
     ) {
         let _ = convert(&s);
     }
