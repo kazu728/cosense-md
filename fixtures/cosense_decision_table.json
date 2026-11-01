@@ -31,6 +31,11 @@
       "expected": ["[Label](https://example.com)"]
     },
     {
+      "id": "labeled_link_label_with_symbols",
+      "source": ["[my-site https://example.com] [https://example.com A/B test]"],
+      "expected": ["[my-site](https://example.com) [A/B test](https://example.com)"]
+    },
+    {
       "id": "bare_url_autolink",
       "source": ["Plain https://example.com text"],
       "expected": ["Plain <https://example.com> text"]
