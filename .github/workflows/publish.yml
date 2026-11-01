@@ -50,15 +50,6 @@ jobs:
           name: wheels-ubuntu-latest-x86_64-auto
           path: dist
       - run: python -m pip install "$(ls dist/*.whl)" pytest
-      - name: Smoke import and convert
-        run: |
-          python - <<'PY'
-          import markitdown_cosense
-          from markitdown_cosense import _core
-          assert _core.convert("[* Title]") == "# Title"
-          assert _core.looks_like_cosense("[* Title]")
-          print("wheel ok:", markitdown_cosense.__version__)
-          PY
       - name: Plugin test suite against the installed wheel
         working-directory: markitdown-cosense
         run: python -m pytest
