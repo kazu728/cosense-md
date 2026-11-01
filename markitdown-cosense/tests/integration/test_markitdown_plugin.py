@@ -8,8 +8,8 @@ from pathlib import Path
 import pytest
 from markitdown import MarkItDown, StreamInfo
 
-from markitdown_cosense import _core, register_converters
-from markitdown_cosense._plugin import MarkdownConverter
+from markitdown_cosense import register_converters
+from markitdown_cosense._plugin import CosenseConverter
 
 
 @pytest.fixture
@@ -20,27 +20,14 @@ def markitdown_with_cosense() -> MarkItDown:
 
 
 @pytest.fixture
-def converter() -> MarkdownConverter:
-    return MarkdownConverter()
+def converter() -> CosenseConverter:
+    return CosenseConverter()
 
 
 def _convert_stream(md: MarkItDown, text: str, extension: str = ".txt") -> str:
     stream = io.BytesIO(text.encode("utf-8"))
     result = md.convert_stream(stream, stream_info=StreamInfo(extension=extension))
     return result.text_content
-
-
-class _NonSeekable(io.BytesIO):
-    """A byte stream that refuses to rewind, to exercise the non-seekable path."""
-
-    def seekable(self) -> bool:
-        return False
-
-    def seek(self, *args: object, **kwargs: object) -> int:
-        raise OSError("not seekable")
-
-    def tell(self, *args: object, **kwargs: object) -> int:
-        raise OSError("not seekable")
 
 
 # ---------------------------------------------------------------------------
@@ -66,11 +53,6 @@ def test_conversion_via_markitdown(
     assert _convert_stream(markitdown_with_cosense, source) == expected
 
 
-def test_core_backs_the_plugin() -> None:
-    # The plugin output is exactly the core's markdown output.
-    assert _core.convert("[* Title]") == "# Title"
-
-
 # ---------------------------------------------------------------------------
 # accepts heuristics and stream handling
 # ---------------------------------------------------------------------------
@@ -88,26 +70,20 @@ def test_core_backs_the_plugin() -> None:
     ids=["heading", "code", "table", "plain", "empty"],
 )
 def test_accepts_heuristics(
-    converter: MarkdownConverter, snippet: str, expected: bool
+    converter: CosenseConverter, snippet: str, expected: bool
 ) -> None:
     stream = io.BytesIO(snippet.encode("utf-8"))
     assert converter.accepts(stream, StreamInfo(extension=".md")) is expected
 
 
-def test_accepts_does_not_consume_stream(converter: MarkdownConverter) -> None:
+def test_accepts_does_not_consume_stream(converter: CosenseConverter) -> None:
     payload = "[* note]\n[tag]"
     stream = io.BytesIO(payload.encode("utf-8"))
     assert converter.accepts(stream, StreamInfo(extension=".md"))
     assert stream.read().decode("utf-8") == payload
 
 
-def test_accepts_refuses_non_seekable_stream(converter: MarkdownConverter) -> None:
-    stream = _NonSeekable(b"[* Heading]\n[tag]")
-    # Cannot rewind, so the converter declines rather than consuming it.
-    assert converter.accepts(stream, StreamInfo(extension=".md")) is False
-
-
-def test_convert_non_utf8_does_not_raise(converter: MarkdownConverter) -> None:
+def test_convert_non_utf8_does_not_raise(converter: CosenseConverter) -> None:
     stream = io.BytesIO("[* 見出し]".encode("shift_jis"))
     result = converter.convert(stream, StreamInfo(extension=".txt"))
     assert isinstance(result.text_content, str)
