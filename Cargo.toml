@@ -13,4 +13,4 @@ default-members = ["crates/cosense-core"]
 version = "0.3.0"
 edition = "2024"
 license = "MIT"
-repository = "https://github.com/kazu728/markitdown-cosense"
+repository = "https://github.com/kazu728/cosense-md"
