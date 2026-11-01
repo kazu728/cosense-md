@@ -1,7 +1,3 @@
-// Side panel: while open, connect to the active tab's content script, convert
-// the Cosense text via the wasm core, and show the Markdown. The connection is
-// per-tab, so the content script only streams while this panel is watching it.
-
 import init, { convert } from "./pkg/cosense_wasm.js";
 
 const PORT = "cosense-markdown-panel";
@@ -14,8 +10,8 @@ const markdown = document.getElementById("markdown");
 const placeholder = document.getElementById("placeholder");
 const copy = document.getElementById("copy");
 
-let lastText = null; // last Cosense text rendered; skip redundant re-render
-let lastFraction = null; // last scroll position from the page, as a 0..1 fraction
+let lastText = null;
+let lastFraction = null;
 
 function render(text) {
   if (text === lastText) return;
@@ -25,14 +21,12 @@ function render(text) {
   markdown.hidden = !hasText;
   copy.hidden = !hasText;
   placeholder.hidden = hasText;
-  if (hasText) applyScroll(); // value replacement resets scrollTop; restore it
+  if (hasText) applyScroll();
   else placeholder.textContent = HINT_EMPTY;
 }
 
 function applyScroll() {
   if (lastFraction === null || markdown.hidden) return;
-  // lastFraction is a position within the content (0 = top line, 1 = last line),
-  // so map it onto the full content height and let the browser clamp scrollTop.
   const f = Math.min(Math.max(lastFraction, 0), 1);
   markdown.scrollTop = f * markdown.scrollHeight;
 }
@@ -51,11 +45,11 @@ let connectSeq = 0;
 function connectToActiveTab() {
   port?.disconnect();
   port = null;
-  lastFraction = null; // don't carry the previous tab's scroll into the new one
+  lastFraction = null;
   const seq = ++connectSeq;
 
   chrome.tabs.query({ active: true, currentWindow: true }).then(([tab]) => {
-    if (seq !== connectSeq) return; // a newer connect superseded this one
+    if (seq !== connectSeq) return;
     if (!tab?.id) return showPlaceholder(HINT_CLOSED);
 
     const active = chrome.tabs.connect(tab.id, { name: PORT });
@@ -71,7 +65,7 @@ function connectToActiveTab() {
       render(message.text);
     });
     active.onDisconnect.addListener(() => {
-      void chrome.runtime.lastError; // expected when the tab has no content script
+      void chrome.runtime.lastError;
       if (active !== port) return;
       port = null;
       if (!gotText) showPlaceholder(HINT_CLOSED);

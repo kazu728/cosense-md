@@ -1,12 +1,9 @@
-# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
 
-# C extensions
 *.so
 
-# Distribution / packaging
 .Python
 build/
 develop-eggs/
@@ -27,11 +24,9 @@ share/python-wheels/
 *.egg
 MANIFEST
 
-# PyInstaller
 *.manifest
 *.spec
 
-# Unit test / coverage reports
 htmlcov/
 .tox/
 .nox/
@@ -45,13 +40,11 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 
-# Virtual environments
 venv/
 ENV/
 env/
 .venv
 
-# IDEs
 .vscode/
 .idea/
 .claude/
@@ -59,23 +52,18 @@ env/
 *.swo
 *~
 
-# OS
 .DS_Store
 Thumbs.db
 
-# Rust
 /target/
 **/*.rs.bk
 
-# Generated wasm packages (rebuild with web/README.md / extension/README.md)
 /web/pkg/
 /extension/pkg/
 
-# Project specific
 *.log
 .ruff_cache/
 
-# Temporary files
 *.tmp
 *.bak
 converted_*.md

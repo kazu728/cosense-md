@@ -1,9 +1,3 @@
-"""Data-driven conversion tests backed by the shared fixture JSON.
-
-The same fixture is the Rust core's conformance suite; here it is exercised
-through the compiled `_core.convert` so the Python surface is validated too.
-"""
-
 from __future__ import annotations
 
 import json
@@ -13,8 +7,6 @@ import pytest
 
 from markitdown_cosense import _core
 
-# The fixture lives at the repository root (language-neutral source of truth):
-# tests/unit/ -> tests/ -> markitdown-cosense/ -> root.
 FIXTURE = Path(__file__).resolve().parents[3] / "fixtures/cosense_decision_table.json"
 
 DECISION_CASES = [

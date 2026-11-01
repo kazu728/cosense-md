@@ -5,10 +5,10 @@ A Chrome extension (MV3) that shows a scrapbox.io page as Markdown in the browse
 ## Build
 
 ```bash
-# 0. First time only: the wasm-bindgen CLI (same version as the crate)
+# 0. Install once. Match the crate version.
 cargo install wasm-bindgen-cli --version 0.2.130
 
-# 1. Package the wasm for the extension (generates extension/pkg/)
+# 1. Build the wasm package.
 cargo build -p cosense-wasm --target wasm32-unknown-unknown --release
 wasm-bindgen target/wasm32-unknown-unknown/release/cosense_wasm.wasm \
   --out-dir extension/pkg --target web

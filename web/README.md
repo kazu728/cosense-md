@@ -5,15 +5,15 @@ A static page that converts Cosense to Markdown in the browser and previews it i
 ## Build & serve
 
 ```bash
-# 0. First time only: the wasm-bindgen CLI (same version as the crate)
+# 0. Install once. Match the crate version.
 cargo install wasm-bindgen-cli --version 0.2.130
 
-# 1. Package the wasm for the browser (generates web/pkg/)
+# 1. Build the wasm package.
 cargo build -p cosense-wasm --target wasm32-unknown-unknown --release
 wasm-bindgen target/wasm32-unknown-unknown/release/cosense_wasm.wasm \
   --out-dir web/pkg --target web
 
-# 2. Serve over a static server (file:// won't work: ESM modules + wasm fetch)
+# 2. Serve over HTTP. file:// is unsupported.
 python3 -m http.server -d web 8000
 # -> http://localhost:8000
 ```

@@ -50,16 +50,10 @@ pythonVersion = "3.10"
 pythonPlatform = "All"
 
 [tool.maturin]
-# Mixed layout: the Python package (accepts/stream glue) lives in python/, and
-# the compiled Rust core is placed at markitdown_cosense._core. All conversion
-# logic is in the Rust core; the Python side is glue plus the compiled module.
-# manifest-path defaults to the Cargo.toml beside this file (the cosense-py crate).
 python-source = "python"
 module-name = "markitdown_cosense._core"
 
 [tool.uv]
-# uv only rebuilds a local project when pyproject.toml changes by default; list
-# the Rust sources too so `uv run pytest` never tests a stale compiled core.
 cache-keys = [
     { file = "pyproject.toml" },
     { file = "Cargo.toml" },
@@ -74,12 +68,10 @@ cache-keys = [
 testpaths = ["tests"]
 
 [tool.ruff]
-# The Python package lives in python/ (Rust source occupies src/), so point ruff's
-# first-party detection there — otherwise markitdown_cosense reads as third-party.
 src = ["python"]
 
 [tool.ruff.lint]
 extend-select = [
-    "I",   # isort
-    "UP",  # pyupgrade
+    "I",
+    "UP",
 ]

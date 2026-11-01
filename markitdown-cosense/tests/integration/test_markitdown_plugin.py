@@ -1,5 +1,3 @@
-"""Integration tests for the Cosense → Markdown plugin (MarkItDown + glue)."""
-
 from __future__ import annotations
 
 import io
@@ -30,11 +28,6 @@ def _convert_stream(md: MarkItDown, text: str, extension: str = ".txt") -> str:
     return result.text_content
 
 
-# ---------------------------------------------------------------------------
-# Conversion via MarkItDown
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.parametrize(
     "source,expected",
     [
@@ -51,11 +44,6 @@ def test_conversion_via_markitdown(
     markitdown_with_cosense: MarkItDown, source: str, expected: str
 ) -> None:
     assert _convert_stream(markitdown_with_cosense, source) == expected
-
-
-# ---------------------------------------------------------------------------
-# accepts heuristics and stream handling
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize(
@@ -87,11 +75,6 @@ def test_convert_non_utf8_does_not_raise(converter: CosenseConverter) -> None:
     stream = io.BytesIO("[* 見出し]".encode("shift_jis"))
     result = converter.convert(stream, StreamInfo(extension=".txt"))
     assert isinstance(result.text_content, str)
-
-
-# ---------------------------------------------------------------------------
-# Filesystem integration
-# ---------------------------------------------------------------------------
 
 
 def test_markitdown_convert_from_file(

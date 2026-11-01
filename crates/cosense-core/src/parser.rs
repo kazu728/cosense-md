@@ -1,17 +1,9 @@
-//! Tokenizer → block parser. Mirrors the two-phase design of the original
-//! Python parser but is written for Rust: indentation and line slicing are done
-//! by `char`, never by byte offset, so tab / full-width-space (U+3000) indents
-//! and multibyte content never split a UTF-8 boundary.
-
 use crate::ast::{Block, Document, ItemContent, ListItem};
 
 const CODE_DIRECTIVE: &str = "code:";
 const TABLE_DIRECTIVE: &str = "table:";
 const FENCE: &str = "```";
 
-/// Bracket-form markers a detector can spot without a full parse: the inline
-/// decorations and the media directives. Heading brackets are covered by
-/// `parse_heading`, and `code:` / `table:` by the directive constants above.
 const DETECT_BRACKET_MARKERS: [&str; 8] = [
     "[*/",
     "[*-",
@@ -23,10 +15,6 @@ const DETECT_BRACKET_MARKERS: [&str; 8] = [
     "[Twitter ",
 ];
 
-/// Heuristic used by the MarkItDown binding to decide whether a stream is
-/// Cosense. It lives beside the parser so the heading pattern and directive
-/// markers have a single definition, rather than being restated in the Python
-/// glue where they had drifted from the core's knowledge.
 pub fn looks_like_cosense(text: &str) -> bool {
     text.lines().any(|line| {
         let line = line.trim();
@@ -40,8 +28,6 @@ pub fn looks_like_cosense(text: &str) -> bool {
     })
 }
 
-/// `[* text]` … `[***** text]` at the start of `line`: the star count (the
-/// heading level), the bracketed text, and whatever follows the closing `]`.
 fn parse_heading(line: &str) -> Option<(usize, &str, &str)> {
     let rest = line.strip_prefix('[')?;
     let level = rest.chars().take_while(|&c| c == '*').count();
@@ -69,7 +55,6 @@ enum TokenKind {
 #[derive(Debug, Clone)]
 struct Token {
     raw: String,
-    /// Number of leading whitespace *characters* (space, tab, U+3000).
     indent: usize,
     kind: TokenKind,
 }
@@ -90,7 +75,6 @@ fn leading_ws(line: &str) -> usize {
         .count()
 }
 
-/// Substring starting at the `char_start`-th character (empty if out of range).
 fn char_substr_from(s: &str, char_start: usize) -> &str {
     match s.char_indices().nth(char_start) {
         Some((byte, _)) => &s[byte..],
@@ -175,9 +159,6 @@ fn tokenize(text: &str) -> Vec<Token> {
         let indent = leading_ws(&raw);
         let stripped = char_substr_from(&raw, indent);
 
-        // Any whitespace-only line is blank, not just one made of indent
-        // characters: a line like " \u{a0}" or " \r" must not become an indented
-        // Text token, or the list parser would stop on it without consuming it.
         if stripped.trim().is_empty() {
             tokens.push(Token {
                 raw,
@@ -279,10 +260,6 @@ fn parse_code_block(tokens: &[Token], start: usize, descriptor: String) -> (Bloc
     (block, next)
 }
 
-/// Collect a `code:` directive's body: every line indented deeper than the
-/// directive, with the common leading indent stripped. Returns the normalized
-/// body lines, the directive's own leading-whitespace prefix, and the index of
-/// the first line past the block. Shared by top-level and list-nested code.
 fn collect_code_body(tokens: &[Token], start: usize) -> (Vec<String>, String, usize) {
     let directive = &tokens[start];
     let base_indent = directive.indent;
@@ -313,10 +290,6 @@ fn collect_code_body(tokens: &[Token], start: usize) -> (Vec<String>, String, us
             continue;
         }
 
-        // A line belongs to the block while it is indented deeper than the
-        // directive — a nested `code:`/`table:` line included, which is body text
-        // here rather than a new block. Any line at or below the directive's
-        // indent ends the block.
         if current.indent > base_indent {
             collected.push(current.raw.clone());
             i += 1;
@@ -363,7 +336,6 @@ fn split_cells(content: &str) -> Vec<String> {
 
 fn parse_list(tokens: &[Token], start: usize) -> (Block, usize) {
     let mut items: Vec<ListItem> = Vec::new();
-    // Raw indentation depths of the ancestors still open above the current item.
     let mut ancestors: Vec<usize> = Vec::new();
     let mut i = start;
     while i < tokens.len() {
@@ -372,18 +344,11 @@ fn parse_list(tokens: &[Token], start: usize) -> (Block, usize) {
             break;
         }
         let depth = current.indent.saturating_sub(1);
-        // Normalize irregular indentation to sequential nesting levels: the level
-        // is the number of strictly-shallower ancestors. An explicit stack (not a
-        // recursive tree) means nesting costs no call-stack, so arbitrarily deep
-        // input converts instead of overflowing.
         while ancestors.last().is_some_and(|&d| d >= depth) {
             ancestors.pop();
         }
         let level = ancestors.len();
         if let TokenKind::CodeDirective { descriptor } = &current.kind {
-            // A `code:` block nested under a bullet: its body (indented deeper
-            // than the directive) is consumed here rather than swallowed as
-            // bullets. A block is a leaf, so it is not pushed onto `ancestors`.
             let (lines, _, next) = collect_code_body(tokens, i);
             let content = if is_math_descriptor(descriptor) {
                 ItemContent::Math { lines }
@@ -433,7 +398,6 @@ fn normalize_code_lines(lines: &[String]) -> Vec<String> {
     normalized
 }
 
-/// A `code:tex` block renders as a `$$` math block rather than fenced code.
 fn is_math_descriptor(descriptor: &str) -> bool {
     descriptor.eq_ignore_ascii_case("tex")
 }

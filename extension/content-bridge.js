@@ -1,9 +1,3 @@
-// ISOLATED world: bridge between the page (postMessage) and the panel (Port).
-// A panel connects a Port only while it is open; the bridge relays text and
-// scroll updates from the MAIN-world script to that Port, and tells the
-// MAIN-world script to start/stop working so nothing runs when no panel is
-// watching.
-
 const TEXT_TYPE = "cosense-markdown-panel:text";
 const SCROLL_TYPE = "cosense-markdown-panel:scroll";
 const START_TYPE = "cosense-markdown-panel:start";

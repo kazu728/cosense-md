@@ -1,6 +1,3 @@
-//! Golden conformance: the shared fixture JSON file is the single source of
-//! truth. Every `{source, expected}` case must convert exactly.
-
 use std::collections::BTreeMap;
 
 use cosense_core::convert;

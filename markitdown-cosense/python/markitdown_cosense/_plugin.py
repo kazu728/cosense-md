@@ -1,10 +1,3 @@
-"""MarkItDown integration glue.
-
-All Cosense→Markdown conversion lives in the compiled Rust core (`._core`). This
-module only decides whether a stream looks like Cosense and hands its text to the
-core; it holds no conversion rules of its own.
-"""
-
 from __future__ import annotations
 
 from typing import BinaryIO
@@ -28,8 +21,7 @@ def register_converters(markitdown: MarkItDown, **_: object) -> None:
 
 
 class CosenseConverter(DocumentConverter):
-    # MarkItDown buffers non-seekable input before calling converters, so the
-    # stream can always be rewound here.
+    # MarkItDown supplies seekable streams.
     def accepts(
         self, file_stream: BinaryIO, stream_info: StreamInfo, **_: object
     ) -> bool:
@@ -45,6 +37,4 @@ class CosenseConverter(DocumentConverter):
 
 
 def _decode(data: bytes) -> str:
-    # Lenient decode: a stray non-UTF-8 byte must never turn detection or
-    # conversion into an exception, and both use the same policy.
     return data.decode("utf-8", errors="replace")

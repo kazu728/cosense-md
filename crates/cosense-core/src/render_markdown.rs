@@ -1,5 +1,3 @@
-//! Markdown renderer: walks the block/inline AST and emits CommonMark.
-
 use crate::ast::{Block, Document, Emphasis, Inline, ItemContent, ListItem};
 use crate::inline::parse_inline;
 
@@ -38,8 +36,6 @@ fn render_block(block: &Block) -> Vec<String> {
     }
 }
 
-// `indent` is the leading whitespace each emitted line carries: the block's own
-// source prefix at top level, or the bullet-derived `"  " * level` when nested.
 fn render_code(language: &str, lines: &[String], indent: &str) -> Vec<String> {
     let fence = if language.is_empty() {
         "```".to_string()
@@ -62,8 +58,6 @@ fn render_math(lines: &[String], indent: &str) -> Vec<String> {
 fn render_list(items: &[ListItem]) -> Vec<String> {
     let mut lines = Vec::new();
     for item in items {
-        // A nested block aligns with its parent bullet's text column so Markdown
-        // keeps it inside the list item.
         let indent = "  ".repeat(item.level);
         match &item.content {
             ItemContent::Text(text) => lines.push(
@@ -88,7 +82,6 @@ fn render_table(title: Option<&str>, header: &[String], rows: &[Vec<String>]) ->
         lines.push(String::new());
     }
 
-    // Column count is the widest row so no cell is ever truncated away.
     let width = header
         .len()
         .max(rows.iter().map(Vec::len).max().unwrap_or(0));
@@ -115,12 +108,6 @@ fn render_inline(text: &str) -> String {
         match node {
             Inline::Text(t) => out.push_str(&t),
             Inline::Emphasis(e) => out.push_str(&render_emphasis(&e)),
-            // Cosense page / tag links carry no URL, so they render as `#name`:
-            // visible to a reader and consistent with `#hashtag`, which passes
-            // through unchanged. `is_tag` admits only word characters, so `#` is
-            // always followed by a non-space — never an ATX heading (`# `), even
-            // at line start. Names with `-`, `/`, `.`, whitespace are not tags
-            // (see `is_tag`) and keep their brackets as Unknown text.
             Inline::Tag(name) => out.push_str(&format!("#{name}")),
             Inline::Image { alt, url } => out.push_str(&format!("![{alt}]({url})")),
             Inline::Link { label, url } => out.push_str(&format!("[{label}]({url})")),

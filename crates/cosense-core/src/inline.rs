@@ -1,17 +1,7 @@
-//! Inline classification: scan a line once, turn each `[...]` span into a typed
-//! `Inline` node, and wrap bare URLs in the plain-text runs between them.
-//!
-//! There is no ordered list of regex substitutions and no negative-lookahead
-//! enumeration: a single left-to-right pass dispatches on the bracket contents,
-//! so rules cannot re-match one another's output and unknown spans fall through
-//! verbatim as `Inline::Unknown`.
-
 use crate::ast::{Emphasis, Inline};
 
 const IMAGE_EXTENSIONS: [&str; 6] = ["png", "jpg", "jpeg", "gif", "svg", "webp"];
 
-/// Parse one source line. Cosense is line-oriented, so a span never crosses a
-/// line boundary and callers never pass a newline.
 pub fn parse_inline(line: &str) -> Vec<Inline> {
     let mut result = Vec::new();
     let mut plain = String::new();
@@ -38,9 +28,6 @@ pub fn parse_inline(line: &str) -> Vec<Inline> {
     result
 }
 
-/// Flush accumulated literal text, wrapping bare `http(s)` URLs in `<...>`.
-/// A URL already preceded by `<` or `(` is left alone (it is inside an existing
-/// autolink or markdown link).
 fn push_plain(plain: &mut String, out: &mut Vec<Inline>) {
     if plain.is_empty() {
         return;
@@ -65,9 +52,6 @@ fn push_plain(plain: &mut String, out: &mut Vec<Inline>) {
     }
 }
 
-/// Byte range of the first `http(s)://…` URL at or after `from`. The URL runs
-/// until whitespace or one of `< > " ' ]`, and needs at least one character
-/// after the scheme.
 fn next_url(text: &str, from: usize) -> Option<(usize, usize)> {
     let mut search = from;
     while let Some(offset) = text[search..].find("http") {
@@ -94,9 +78,6 @@ fn next_url(text: &str, from: usize) -> Option<(usize, usize)> {
     None
 }
 
-/// Parse one bracket span starting at `rest[0] == '['`. Returns the node and the
-/// number of bytes consumed, or `None` when the `[` is not the start of a span
-/// we own: no closing `]`, or an existing markdown link `[label](url)`.
 fn try_bracket(rest: &str) -> Option<(Inline, usize)> {
     if let Some(after) = rest.strip_prefix("[[")
         && let Some(close) = after.find("]]")
@@ -108,14 +89,14 @@ fn try_bracket(rest: &str) -> Option<(Inline, usize)> {
                 strike: false,
                 text: after[..close].to_string(),
             }),
-            close + 4, // "[[" + inner + "]]"
+            close + 4,
         ));
     }
 
     let after_open = &rest[1..];
     let close = after_open.find(']')?;
     let inner = &after_open[..close];
-    let consumed = close + 2; // "[" + inner + "]"
+    let consumed = close + 2;
 
     if rest[consumed..].starts_with('(') {
         return None;
@@ -139,14 +120,7 @@ fn classify_bracket(inner: &str) -> Inline {
     Inline::Unknown(format!("[{inner}]"))
 }
 
-/// `[* x]` `[** x]` (bold), `[*/ x]` `[*- x]` `[/- x]` `[/ x]` `[- x]` — a
-/// decoration marker must be followed by whitespace, which is what keeps
-/// `[/project/page]` from being read as italic.
 fn decoration(inner: &str) -> Option<Emphasis> {
-    // Bold is a run of one or more `*` (Cosense scales the size by count; Markdown
-    // has a single bold), so it does not fit the fixed-string table below. Combos
-    // like `*/` are left to the table: their leading `*` is followed by `/`, not
-    // whitespace, so this rule never claims them.
     let stars = inner.chars().take_while(|&c| c == '*').count();
     if stars > 0 {
         let after = &inner[stars..];
@@ -269,14 +243,10 @@ fn is_twitter(url: &str) -> bool {
     (url.contains("twitter.com/") || url.contains("x.com/")) && url.contains("/status/")
 }
 
-/// A link label must not contain the characters the reverse/forward link rules
-/// exclude (`/ - * ]`), matching the original renderer's label class.
 fn is_valid_label(label: &str) -> bool {
     !label.is_empty() && !label.chars().any(|c| matches!(c, '/' | '-' | '*' | ']'))
 }
 
-/// A bare page name of word characters, rendered as a `#name` tag. Names
-/// containing `-`, `/`, `.`, `*`, whitespace, etc. fall through untouched.
 fn is_tag(inner: &str) -> bool {
     !inner.is_empty() && inner.chars().all(|c| c.is_alphanumeric() || c == '_')
 }
