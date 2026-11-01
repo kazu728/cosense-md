@@ -65,7 +65,7 @@ struct Token {
 
 impl Token {
     fn is_blank(&self) -> bool {
-        self.raw.trim().is_empty()
+        matches!(self.kind, TokenKind::Blank)
     }
 
     fn content(&self) -> &str {
@@ -165,7 +165,10 @@ fn tokenize(text: &str) -> Vec<Token> {
         let indent = leading_ws(&raw);
         let stripped = char_substr_from(&raw, indent);
 
-        if stripped.is_empty() {
+        // Any whitespace-only line is blank, not just one made of indent
+        // characters: a line like " \u{a0}" or " \r" must not become an indented
+        // Text token, or the list parser would stop on it without consuming it.
+        if stripped.trim().is_empty() {
             tokens.push(Token {
                 raw,
                 indent,
