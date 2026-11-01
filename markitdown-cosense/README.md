@@ -8,7 +8,7 @@ A [MarkItDown](https://github.com/microsoft/markitdown) plugin that converts Cos
 - Lists: indented bullets using spaces, tabs, or full-width spaces
 - Code blocks: `code:language` (indented body) and fenced ``` ``` sections
 - Tables: `table:Title` directives with tab-separated cells
-- Links & media: `[Label https://example]`, `[img https://.../image.png]`, `[YouTube …]`, `[Twitter …]`
+- Links & images: `[Label https://example]`, `[https://example/image.png]`
 - Math: `code:tex` blocks → `$$ … $$`
 - Tags & page links: `[tag]` → `#tag`
 

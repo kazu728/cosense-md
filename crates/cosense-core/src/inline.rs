@@ -100,9 +100,6 @@ fn classify_bracket(inner: &str) -> Inline {
     if let Some(emphasis) = decoration(inner) {
         return Inline::Emphasis(emphasis);
     }
-    if let Some(image) = image_directive(inner) {
-        return image;
-    }
     if let Some(link) = url_bracket(inner) {
         return link;
     }
@@ -148,49 +145,17 @@ fn decoration(inner: &str) -> Option<Emphasis> {
     None
 }
 
-fn image_directive(inner: &str) -> Option<Inline> {
-    let after = inner.strip_prefix("img")?;
-    if !after.starts_with(|c: char| c.is_whitespace()) {
-        return None;
-    }
-    let url = after.trim();
-    is_http_url(url).then(|| Inline::Image {
-        alt: "img".to_string(),
-        url: url.to_string(),
-    })
-}
-
 fn url_bracket(inner: &str) -> Option<Inline> {
     let parts: Vec<&str> = inner.split_whitespace().collect();
     match parts.as_slice() {
         [single] if is_http_url(single) => {
             if is_image_url(single) {
-                Some(Inline::Image {
-                    alt: String::new(),
-                    url: (*single).to_string(),
-                })
+                Some(Inline::Image((*single).to_string()))
             } else {
                 Some(Inline::AutoLink((*single).to_string()))
             }
         }
         [first, .., last] => {
-            if *first == "YouTube"
-                && let Some(url) = parts.iter().find(|p| is_http_url(p) && is_youtube(p))
-            {
-                return Some(Inline::Link {
-                    label: "YouTube Video".to_string(),
-                    url: (*url).to_string(),
-                });
-            }
-            if *first == "Twitter"
-                && let Some(url) = parts.iter().find(|p| is_http_url(p) && is_twitter(p))
-            {
-                return Some(Inline::Link {
-                    label: "Twitter Post".to_string(),
-                    url: (*url).to_string(),
-                });
-            }
-
             if is_http_url(last) {
                 return Some(Inline::Link {
                     label: parts[..parts.len() - 1].join(" "),
@@ -210,7 +175,7 @@ fn url_bracket(inner: &str) -> Option<Inline> {
 }
 
 fn is_http_url(s: &str) -> bool {
-    (s.starts_with("http://") || s.starts_with("https://")) && !s.chars().any(|c| c.is_whitespace())
+    s.starts_with("http://") || s.starts_with("https://")
 }
 
 fn is_image_url(url: &str) -> bool {
@@ -218,14 +183,6 @@ fn is_image_url(url: &str) -> bool {
     IMAGE_EXTENSIONS
         .iter()
         .any(|ext| lower.ends_with(&format!(".{ext}")))
-}
-
-fn is_youtube(url: &str) -> bool {
-    url.contains("youtube.com/watch") || url.contains("youtu.be/")
-}
-
-fn is_twitter(url: &str) -> bool {
-    (url.contains("twitter.com/") || url.contains("x.com/")) && url.contains("/status/")
 }
 
 fn is_tag(inner: &str) -> bool {

@@ -4,16 +4,7 @@ const CODE_DIRECTIVE: &str = "code:";
 const TABLE_DIRECTIVE: &str = "table:";
 const FENCE: &str = "```";
 
-const DETECT_BRACKET_MARKERS: [&str; 8] = [
-    "[*/",
-    "[*-",
-    "[/-",
-    "[/ ",
-    "[- ",
-    "[img ",
-    "[YouTube ",
-    "[Twitter ",
-];
+const DETECT_BRACKET_MARKERS: [&str; 5] = ["[*/", "[*-", "[/-", "[/ ", "[- "];
 
 pub fn looks_like_cosense(text: &str) -> bool {
     text.lines().any(|line| {

@@ -11,11 +11,6 @@
       "expected": ["#SomePage"]
     },
     {
-      "id": "inline_image_tagged",
-      "source": ["[img https://example.com/image.jpg]"],
-      "expected": ["![img](https://example.com/image.jpg)"]
-    },
-    {
       "id": "inline_image_auto",
       "source": ["[https://example.com/image.png]"],
       "expected": ["![](https://example.com/image.png)"]
@@ -74,16 +69,6 @@
       "id": "double_bracket_bold",
       "source": ["[[strong]]"],
       "expected": ["**strong**"]
-    },
-    {
-      "id": "youtube_link",
-      "source": ["[YouTube https://youtu.be/dQw4w9WgXcQ]"],
-      "expected": ["[YouTube Video](https://youtu.be/dQw4w9WgXcQ)"]
-    },
-    {
-      "id": "twitter_link",
-      "source": ["[Twitter https://twitter.com/jack/status/20]"],
-      "expected": ["[Twitter Post](https://twitter.com/jack/status/20)"]
     }
   ],
   "tag_links": [
@@ -315,7 +300,6 @@
         "Links and Images:",
         "[Google https://google.com]",
         "[https://example.com/image.png]",
-        "[img https://example.com/logo.png]",
         "",
         "Lists:",
         " Item 1",
@@ -349,7 +333,6 @@
         "Links and Images:",
         "[Google](https://google.com)",
         "![](https://example.com/image.png)",
-        "![img](https://example.com/logo.png)",
         "",
         "Lists:",
         "- Item 1",

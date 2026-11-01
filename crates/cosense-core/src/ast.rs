@@ -42,7 +42,7 @@ pub enum Inline {
     Text(String),
     Emphasis(Emphasis),
     Tag(String),
-    Image { alt: String, url: String },
+    Image(String),
     Link { label: String, url: String },
     AutoLink(String),
 }

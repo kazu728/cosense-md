@@ -86,7 +86,7 @@ fn render_inline(text: &str) -> String {
             Inline::Text(t) => out.push_str(&t),
             Inline::Emphasis(e) => out.push_str(&render_emphasis(&e)),
             Inline::Tag(name) => out.push_str(&format!("#{name}")),
-            Inline::Image { alt, url } => out.push_str(&format!("![{alt}]({url})")),
+            Inline::Image(url) => out.push_str(&format!("![]({url})")),
             Inline::Link { label, url } => out.push_str(&format!("[{label}]({url})")),
             Inline::AutoLink(url) => out.push_str(&format!("<{url}>")),
         }

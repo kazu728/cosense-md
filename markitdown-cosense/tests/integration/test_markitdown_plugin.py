@@ -80,10 +80,10 @@ def test_convert_non_utf8_does_not_raise(converter: CosenseConverter) -> None:
 def test_markitdown_convert_from_file(
     markitdown_with_cosense: MarkItDown, tmp_path: Path
 ) -> None:
-    lines = ["[* File Heading]", "[img https://example.com/logo.png]"]
+    lines = ["[* File Heading]", "[https://example.com/logo.png]"]
     path = tmp_path / "note.txt"
     path.write_text("\n".join(lines), encoding="utf-8")
 
     result = markitdown_with_cosense.convert(path)
     assert "# File Heading" in result.text_content
-    assert "![img](https://example.com/logo.png)" in result.text_content
+    assert "![](https://example.com/logo.png)" in result.text_content
