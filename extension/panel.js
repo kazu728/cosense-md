@@ -1,6 +1,5 @@
 import init, { convert } from "./pkg/cosense_wasm.js";
 
-const PORT = "cosense-markdown-panel";
 const SCROLL_TYPE = "cosense-markdown-panel:scroll";
 const HINT_CLOSED = "Open a scrapbox.io page (reload the tab if one is already open)";
 const HINT_EMPTY = "This page has no body content to show";
@@ -11,7 +10,7 @@ const placeholder = document.getElementById("placeholder");
 const copy = document.getElementById("copy");
 
 let lastText = null;
-let lastFraction = null;
+let lastFraction = 0;
 
 function render(text) {
   if (text === lastText) return;
@@ -26,7 +25,6 @@ function render(text) {
 }
 
 function applyScroll() {
-  if (lastFraction === null || markdown.hidden) return;
   markdown.scrollTop = lastFraction * markdown.scrollHeight;
 }
 
@@ -44,14 +42,14 @@ let connectSeq = 0;
 function connectToActiveTab() {
   port?.disconnect();
   port = null;
-  lastFraction = null;
+  lastFraction = 0;
   const seq = ++connectSeq;
 
   chrome.tabs.query({ active: true, currentWindow: true }).then(([tab]) => {
     if (seq !== connectSeq) return;
     if (!tab?.id) return showPlaceholder(HINT_CLOSED);
 
-    const active = chrome.tabs.connect(tab.id, { name: PORT });
+    const active = chrome.tabs.connect(tab.id);
     let gotText = false;
 
     active.onMessage.addListener((message) => {
