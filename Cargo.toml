@@ -1,5 +1,5 @@
 [workspace]
-resolver = "2"
+resolver = "3"
 members = ["crates/cosense-core", "crates/cosense-wasm", "markitdown-cosense"]
 # Only the core is in the default host build/test set. The binding crates are
 # built by their own toolchains — cosense-py by maturin (which supplies the
@@ -11,6 +11,6 @@ default-members = ["crates/cosense-core"]
 # `<field>.workspace = true`, so a release bumps a single line.
 [workspace.package]
 version = "0.3.0"
-edition = "2021"
+edition = "2024"
 license = "MIT"
 repository = "https://github.com/kazu728/markitdown-cosense"

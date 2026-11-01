@@ -15,9 +15,11 @@ fn render_block(block: &Block) -> Vec<String> {
     match block {
         Block::Heading { level, text } => {
             let heading = render_inline(text);
-            vec![format!("{} {}", "#".repeat(*level), heading)
-                .trim_end()
-                .to_string()]
+            vec![
+                format!("{} {}", "#".repeat(*level), heading)
+                    .trim_end()
+                    .to_string(),
+            ]
         }
         Block::Paragraph { text } => render_inline(text)
             .split('\n')
