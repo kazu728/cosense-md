@@ -18,13 +18,12 @@ const DETECT_BRACKET_MARKERS: [&str; 8] = [
 pub fn looks_like_cosense(text: &str) -> bool {
     text.lines().any(|line| {
         let line = line.trim();
-        !line.is_empty()
-            && (parse_heading(line).is_some()
-                || line.starts_with(CODE_DIRECTIVE)
-                || line.starts_with(TABLE_DIRECTIVE)
-                || DETECT_BRACKET_MARKERS
-                    .iter()
-                    .any(|marker| line.starts_with(marker)))
+        parse_heading(line).is_some()
+            || line.starts_with(CODE_DIRECTIVE)
+            || line.starts_with(TABLE_DIRECTIVE)
+            || DETECT_BRACKET_MARKERS
+                .iter()
+                .any(|marker| line.starts_with(marker))
     })
 }
 
@@ -42,7 +41,7 @@ fn parse_heading(line: &str) -> Option<(usize, &str, &str)> {
     Some((level, text, trailing))
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 enum TokenKind {
     Blank,
     Heading { level: usize, text: String },
@@ -52,7 +51,7 @@ enum TokenKind {
     Text,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 struct Token {
     raw: String,
     indent: usize,
@@ -267,35 +266,12 @@ fn collect_code_body(tokens: &[Token], start: usize) -> (Vec<String>, String, us
 
     let mut collected: Vec<String> = Vec::new();
     let mut i = start + 1;
-    while i < tokens.len() {
-        let current = &tokens[i];
-        if current.is_blank() {
-            let mut next = i + 1;
-            while next < tokens.len() && tokens[next].is_blank() {
-                next += 1;
-            }
-            if next >= tokens.len() {
-                for token in &tokens[i..next] {
-                    collected.push(token.raw.clone());
-                }
-                i = next;
-                break;
-            }
-            let following = &tokens[next];
-            if following.indent <= base_indent {
-                break;
-            }
-            collected.push(current.raw.clone());
-            i += 1;
-            continue;
-        }
-
-        if current.indent > base_indent {
-            collected.push(current.raw.clone());
-            i += 1;
-        } else {
-            break;
-        }
+    while let Some(offset) = tokens[i..].iter().position(|t| !t.is_blank())
+        && tokens[i + offset].indent > base_indent
+    {
+        let end = i + offset + 1;
+        collected.extend(tokens[i..end].iter().map(|t| t.raw.clone()));
+        i = end;
     }
 
     (normalize_code_lines(&collected), indent, i)
@@ -343,8 +319,7 @@ fn parse_list(tokens: &[Token], start: usize) -> (Block, usize) {
         if current.indent == 0 || current.is_blank() {
             break;
         }
-        let depth = current.indent.saturating_sub(1);
-        while ancestors.last().is_some_and(|&d| d >= depth) {
+        while ancestors.last().is_some_and(|&d| d >= current.indent) {
             ancestors.pop();
         }
         let level = ancestors.len();
@@ -366,7 +341,7 @@ fn parse_list(tokens: &[Token], start: usize) -> (Block, usize) {
             level,
             content: ItemContent::Text(current.content().to_string()),
         });
-        ancestors.push(depth);
+        ancestors.push(current.indent);
         i += 1;
     }
     (Block::BulletList { items }, i)
@@ -377,12 +352,9 @@ fn normalize_code_lines(lines: &[String]) -> Vec<String> {
         .iter()
         .filter(|line| !line.trim().is_empty())
         .map(|line| leading_ws(line))
-        .min();
-    let Some(indent_width) = indent_width else {
-        return Vec::new();
-    };
-
-    let mut normalized: Vec<String> = lines
+        .min()
+        .unwrap_or(0);
+    lines
         .iter()
         .map(|line| {
             if line.trim().is_empty() {
@@ -391,11 +363,7 @@ fn normalize_code_lines(lines: &[String]) -> Vec<String> {
                 char_substr_from(line, indent_width).to_string()
             }
         })
-        .collect();
-    while matches!(normalized.last(), Some(line) if line.is_empty()) {
-        normalized.pop();
-    }
-    normalized
+        .collect()
 }
 
 fn is_math_descriptor(descriptor: &str) -> bool {

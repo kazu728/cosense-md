@@ -7,8 +7,8 @@ pub fn parse_inline(line: &str) -> Vec<Inline> {
     let mut plain = String::new();
     let mut rest = line;
 
-    while !rest.is_empty() {
-        if rest.starts_with('[')
+    while let Some(ch) = rest.chars().next() {
+        if ch == '['
             && let Some((inline, consumed)) = try_bracket(rest)
         {
             push_plain(&mut plain, &mut result);
@@ -16,13 +16,8 @@ pub fn parse_inline(line: &str) -> Vec<Inline> {
             rest = &rest[consumed..];
             continue;
         }
-        match rest.chars().next() {
-            Some(ch) => {
-                plain.push(ch);
-                rest = &rest[ch.len_utf8()..];
-            }
-            None => break,
-        }
+        plain.push(ch);
+        rest = &rest[ch.len_utf8()..];
     }
     push_plain(&mut plain, &mut result);
     result
@@ -117,7 +112,7 @@ fn classify_bracket(inner: &str) -> Inline {
     if is_tag(inner) {
         return Inline::Tag(inner.to_string());
     }
-    Inline::Unknown(format!("[{inner}]"))
+    Inline::Text(format!("[{inner}]"))
 }
 
 fn decoration(inner: &str) -> Option<Emphasis> {
@@ -244,7 +239,7 @@ fn is_twitter(url: &str) -> bool {
 }
 
 fn is_valid_label(label: &str) -> bool {
-    !label.is_empty() && !label.chars().any(|c| matches!(c, '/' | '-' | '*' | ']'))
+    !label.is_empty() && !label.chars().any(|c| matches!(c, '/' | '-' | '*'))
 }
 
 fn is_tag(inner: &str) -> bool {

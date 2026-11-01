@@ -60,11 +60,7 @@ fn render_list(items: &[ListItem]) -> Vec<String> {
     for item in items {
         let indent = "  ".repeat(item.level);
         match &item.content {
-            ItemContent::Text(text) => lines.push(
-                format!("{indent}- {}", render_inline(text))
-                    .trim_end()
-                    .to_string(),
-            ),
+            ItemContent::Text(text) => lines.push(format!("{indent}- {}", render_inline(text))),
             ItemContent::Code {
                 language,
                 lines: body,
@@ -112,7 +108,6 @@ fn render_inline(text: &str) -> String {
             Inline::Image { alt, url } => out.push_str(&format!("![{alt}]({url})")),
             Inline::Link { label, url } => out.push_str(&format!("[{label}]({url})")),
             Inline::AutoLink(url) => out.push_str(&format!("<{url}>")),
-            Inline::Unknown(raw) => out.push_str(&raw),
         }
     }
     out
