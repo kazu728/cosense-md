@@ -16,6 +16,11 @@
       "expected": ["![img](https://example.com/image.jpg)"]
     },
     {
+      "id": "inline_image_tagged_padded",
+      "source": ["[ img https://example.com/image.jpg ]"],
+      "expected": ["![img](https://example.com/image.jpg)"]
+    },
+    {
       "id": "inline_image_auto",
       "source": ["[https://example.com/image.png]"],
       "expected": ["![](https://example.com/image.png)"]
