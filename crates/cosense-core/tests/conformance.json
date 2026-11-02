@@ -16,6 +16,11 @@
       "expected": ["![img](https://example.com/image.jpg)"]
     },
     {
+      "id": "inline_image_tagged_padded",
+      "source": ["[ img https://example.com/image.jpg ]"],
+      "expected": ["![img](https://example.com/image.jpg)"]
+    },
+    {
       "id": "inline_image_auto",
       "source": ["[https://example.com/image.png]"],
       "expected": ["![](https://example.com/image.png)"]
@@ -217,6 +222,16 @@
       "expected": ["- ```js", "- x"]
     },
     {
+      "id": "code_block_body_with_fence_gets_longer_fence",
+      "source": ["code:README.md", " # Title", " ```js", " x", " ```"],
+      "expected": ["````md", "# Title", "```js", "x", "```", "````"]
+    },
+    {
+      "id": "fenced_code_body_with_indented_fence_gets_longer_fence",
+      "source": ["```", "  ```", "```"],
+      "expected": ["````", "  ```", "````"]
+    },
+    {
       "id": "list_nested_math_block",
       "source": [" 分散", "  code:tex", "   V(X) = E((X-μ)^2)"],
       "expected": ["- 分散", "  $$", "  V(X) = E((X-μ)^2)", "  $$"]
@@ -257,6 +272,11 @@
       "id": "table_multiword_cell_preserved",
       "source": ["table:People", " Full Name\tAge", " Alice Smith\t20"],
       "expected": ["## People", "", "| Full Name | Age |", "|---|---|", "| Alice Smith | 20 |"]
+    },
+    {
+      "id": "table_cell_pipe_escaped",
+      "source": ["table:T", " a|b\tc"],
+      "expected": ["## T", "", "| a\\|b | c |", "|---|---|"]
     },
     {
       "id": "table_ragged_row_not_truncated",

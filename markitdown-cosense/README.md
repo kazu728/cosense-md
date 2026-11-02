@@ -17,9 +17,17 @@ A [MarkItDown](https://github.com/microsoft/markitdown) plugin that converts Cos
 pip install markitdown markitdown-cosense
 ```
 
+## Which files it converts
+Files with a `.txt` extension (or a stream with no extension) whose first 4 KiB contain Cosense notation. Other formats such as `.md` or `.py` are left to MarkItDown's own converters. Input is read as UTF-8.
+
 ## CLI
 ```bash
 markitdown --use-plugins note.txt > note.md
+```
+
+When reading from stdin, pass the extension hint:
+```bash
+markitdown --use-plugins -x txt < note.txt > note.md
 ```
 
 ## Python

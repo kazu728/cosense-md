@@ -27,7 +27,7 @@ jobs:
       - run: cargo test -p cosense-core
 
   lint:
-    name: Python Lint & Format
+    name: Python (ruff / pyright)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -41,20 +41,6 @@ jobs:
           uv sync --locked --no-install-project
           uv run --no-sync ruff format --check python tests
           uv run --no-sync ruff check python tests --output-format=github
-
-  typecheck:
-    name: Python Type Check
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: markitdown-cosense
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
-        with:
-          enable-cache: true
-      - run: |
-          uv sync --locked --no-install-project
           uv run --no-sync pyright
 
   test:
@@ -78,5 +64,3 @@ jobs:
       - run: |
           uv sync --locked
           uv run pytest
-          uv run markitdown --use-plugins tests/test_cosense_notation.txt > /tmp/out.md
-          grep -qF '# Heading Level 1' /tmp/out.md

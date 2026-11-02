@@ -6,15 +6,12 @@ from pathlib import Path
 import pytest
 from markitdown import MarkItDown, StreamInfo
 
-from markitdown_cosense import register_converters
-from markitdown_cosense._plugin import CosenseConverter
+from markitdown_cosense import CosenseConverter
 
 
 @pytest.fixture
-def markitdown_with_cosense() -> MarkItDown:
-    md = MarkItDown()
-    register_converters(md)
-    return md
+def markitdown() -> MarkItDown:
+    return MarkItDown(enable_plugins=True)
 
 
 @pytest.fixture
@@ -41,34 +38,40 @@ def _convert_stream(md: MarkItDown, text: str, extension: str = ".txt") -> str:
     ids=["heading", "code", "table"],
 )
 def test_conversion_via_markitdown(
-    markitdown_with_cosense: MarkItDown, source: str, expected: str
+    markitdown: MarkItDown, source: str, expected: str
 ) -> None:
-    assert _convert_stream(markitdown_with_cosense, source) == expected
+    assert _convert_stream(markitdown, source) == expected
 
 
 @pytest.mark.parametrize(
-    "snippet,expected",
+    "snippet,extension,expected",
     [
-        ("[* Heading]\n[tag]", True),
-        ("code:python\n print()", True),
-        ("table:Users\n Name", True),
-        ("Plain text without markers", False),
-        ("", False),
+        ("[* Heading]\n[tag]", ".txt", True),
+        ("code:python\n print()", ".txt", True),
+        ("table:Users\n Name", "", True),
+        ("Plain text without markers", ".txt", False),
+        ("", ".txt", False),
+        ("[* Heading]\n[tag]", ".md", False),
     ],
-    ids=["heading", "code", "table", "plain", "empty"],
+    ids=["heading", "code", "table", "plain", "empty", "markdown-file"],
 )
 def test_accepts_heuristics(
-    converter: CosenseConverter, snippet: str, expected: bool
+    converter: CosenseConverter, snippet: str, extension: str, expected: bool
 ) -> None:
     stream = io.BytesIO(snippet.encode("utf-8"))
-    assert converter.accepts(stream, StreamInfo(extension=".md")) is expected
+    assert converter.accepts(stream, StreamInfo(extension=extension)) is expected
 
 
 def test_accepts_does_not_consume_stream(converter: CosenseConverter) -> None:
     payload = "[* note]\n[tag]"
     stream = io.BytesIO(payload.encode("utf-8"))
-    assert converter.accepts(stream, StreamInfo(extension=".md"))
+    assert converter.accepts(stream, StreamInfo(extension=".txt"))
     assert stream.read().decode("utf-8") == payload
+
+
+def test_other_text_formats_are_left_alone(markitdown: MarkItDown) -> None:
+    source = "class Error:\n    code: int\n    message: str"
+    assert _convert_stream(markitdown, source, extension=".py") == source
 
 
 def test_convert_non_utf8_does_not_raise(converter: CosenseConverter) -> None:
@@ -77,13 +80,11 @@ def test_convert_non_utf8_does_not_raise(converter: CosenseConverter) -> None:
     assert isinstance(result.text_content, str)
 
 
-def test_markitdown_convert_from_file(
-    markitdown_with_cosense: MarkItDown, tmp_path: Path
-) -> None:
+def test_markitdown_convert_from_file(markitdown: MarkItDown, tmp_path: Path) -> None:
     lines = ["[* File Heading]", "[img https://example.com/logo.png]"]
     path = tmp_path / "note.txt"
     path.write_text("\n".join(lines), encoding="utf-8")
 
-    result = markitdown_with_cosense.convert(path)
+    result = markitdown.convert(path)
     assert "# File Heading" in result.text_content
     assert "![img](https://example.com/logo.png)" in result.text_content
