@@ -120,7 +120,7 @@ fn fenced_code(lines: &[Line], start: usize, language: &str, out: &mut Vec<Strin
         .map(|line| line.raw)
         .take_while(|raw| !raw.starts_with(FENCE))
         .collect();
-    push_block(out, "", &format!("```{language}"), &body, "```");
+    push_code(out, "", language, &body);
     (start + body.len() + 2).min(lines.len())
 }
 
@@ -155,9 +155,22 @@ fn code_block(lines: &[Line], start: usize, indent: &str, out: &mut Vec<String>)
         let language = descriptor
             .rsplit_once('.')
             .map_or(descriptor, |(_, ext)| ext);
-        push_block(out, indent, &format!("```{language}"), &body, "```");
+        push_code(out, indent, language, &body);
     }
     end
+}
+
+fn push_code(out: &mut Vec<String>, indent: &str, language: &str, body: &[&str]) {
+    let longest_run = body
+        .iter()
+        .map(|line| {
+            let line = line.trim_start();
+            line.len() - line.trim_start_matches('`').len()
+        })
+        .max()
+        .unwrap_or(0);
+    let fence = "`".repeat(longest_run.max(2) + 1);
+    push_block(out, indent, &format!("{fence}{language}"), body, &fence);
 }
 
 fn push_block(out: &mut Vec<String>, indent: &str, open: &str, body: &[&str], close: &str) {
@@ -185,7 +198,10 @@ fn table(lines: &[Line], start: usize, title: &str, out: &mut Vec<String>) -> Op
 }
 
 fn table_row(cells: &[&str], width: usize) -> String {
-    let mut cells: Vec<String> = cells.iter().map(|cell| inline::convert(cell)).collect();
+    let mut cells: Vec<String> = cells
+        .iter()
+        .map(|cell| inline::convert(cell).replace('|', "\\|"))
+        .collect();
     cells.resize(width, String::new());
     format!("| {} |", cells.join(" | "))
 }
