@@ -26,7 +26,7 @@ function render(text) {
 }
 
 function applyScroll() {
-  if (lastFraction === null || markdown.hidden) return;
+  if (lastFraction === null) return;
   markdown.scrollTop = lastFraction * markdown.scrollHeight;
 }
 

@@ -8,13 +8,9 @@ chrome.runtime.onConnect.addListener((port) => {
   if (port.name !== PORT) return;
 
   const onMessage = (event) => {
-    if (event.source !== window || event.origin !== location.origin) return;
-    const data = event.data;
-    if (data?.type === TEXT_TYPE) {
-      port.postMessage({ type: TEXT_TYPE, text: data.text });
-    } else if (data?.type === SCROLL_TYPE) {
-      port.postMessage({ type: SCROLL_TYPE, f: data.f });
-    }
+    if (event.source !== window) return;
+    const type = event.data?.type;
+    if (type === TEXT_TYPE || type === SCROLL_TYPE) port.postMessage(event.data);
   };
 
   window.addEventListener("message", onMessage);
