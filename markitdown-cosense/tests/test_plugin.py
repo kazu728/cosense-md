@@ -44,28 +44,34 @@ def test_conversion_via_markitdown(
 
 
 @pytest.mark.parametrize(
-    "snippet,expected",
+    "snippet,extension,expected",
     [
-        ("[* Heading]\n[tag]", True),
-        ("code:python\n print()", True),
-        ("table:Users\n Name", True),
-        ("Plain text without markers", False),
-        ("", False),
+        ("[* Heading]\n[tag]", ".txt", True),
+        ("code:python\n print()", ".txt", True),
+        ("table:Users\n Name", "", True),
+        ("Plain text without markers", ".txt", False),
+        ("", ".txt", False),
+        ("[* Heading]\n[tag]", ".md", False),
     ],
-    ids=["heading", "code", "table", "plain", "empty"],
+    ids=["heading", "code", "table", "plain", "empty", "markdown-file"],
 )
 def test_accepts_heuristics(
-    converter: CosenseConverter, snippet: str, expected: bool
+    converter: CosenseConverter, snippet: str, extension: str, expected: bool
 ) -> None:
     stream = io.BytesIO(snippet.encode("utf-8"))
-    assert converter.accepts(stream, StreamInfo(extension=".md")) is expected
+    assert converter.accepts(stream, StreamInfo(extension=extension)) is expected
 
 
 def test_accepts_does_not_consume_stream(converter: CosenseConverter) -> None:
     payload = "[* note]\n[tag]"
     stream = io.BytesIO(payload.encode("utf-8"))
-    assert converter.accepts(stream, StreamInfo(extension=".md"))
+    assert converter.accepts(stream, StreamInfo(extension=".txt"))
     assert stream.read().decode("utf-8") == payload
+
+
+def test_other_text_formats_are_left_alone(markitdown: MarkItDown) -> None:
+    source = "class Error:\n    code: int\n    message: str"
+    assert _convert_stream(markitdown, source, extension=".py") == source
 
 
 def test_convert_non_utf8_does_not_raise(converter: CosenseConverter) -> None:

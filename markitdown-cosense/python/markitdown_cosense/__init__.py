@@ -15,6 +15,7 @@ from . import _core
 __version__ = version("markitdown-cosense")
 __plugin_interface_version__ = 1
 
+_EXTENSIONS = ("", ".txt")
 _PEEK_SIZE = 4096
 
 
@@ -27,6 +28,8 @@ class CosenseConverter(DocumentConverter):
     def accepts(
         self, file_stream: BinaryIO, stream_info: StreamInfo, **_: object
     ) -> bool:
+        if (stream_info.extension or "").lower() not in _EXTENSIONS:
+            return False
         position = file_stream.tell()
         snippet = file_stream.read(_PEEK_SIZE)
         file_stream.seek(position)
