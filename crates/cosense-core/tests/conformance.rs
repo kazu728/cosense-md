@@ -12,13 +12,8 @@ struct Case {
 
 #[test]
 fn markdown_conformance() {
-    let fixture = concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/../../fixtures/cosense_decision_table.json"
-    );
-    let raw = std::fs::read_to_string(fixture).expect("read fixture");
     let table: BTreeMap<String, Vec<Case>> =
-        serde_json::from_str(&raw).expect("parse fixture json");
+        serde_json::from_str(include_str!("conformance.json")).expect("parse fixture json");
 
     let mut failures = Vec::new();
     for (category, cases) in &table {

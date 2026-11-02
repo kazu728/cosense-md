@@ -6,15 +6,12 @@ from pathlib import Path
 import pytest
 from markitdown import MarkItDown, StreamInfo
 
-from markitdown_cosense import register_converters
-from markitdown_cosense._plugin import CosenseConverter
+from markitdown_cosense import CosenseConverter
 
 
 @pytest.fixture
-def markitdown_with_cosense() -> MarkItDown:
-    md = MarkItDown()
-    register_converters(md)
-    return md
+def markitdown() -> MarkItDown:
+    return MarkItDown(enable_plugins=True)
 
 
 @pytest.fixture
@@ -41,9 +38,9 @@ def _convert_stream(md: MarkItDown, text: str, extension: str = ".txt") -> str:
     ids=["heading", "code", "table"],
 )
 def test_conversion_via_markitdown(
-    markitdown_with_cosense: MarkItDown, source: str, expected: str
+    markitdown: MarkItDown, source: str, expected: str
 ) -> None:
-    assert _convert_stream(markitdown_with_cosense, source) == expected
+    assert _convert_stream(markitdown, source) == expected
 
 
 @pytest.mark.parametrize(
@@ -77,13 +74,11 @@ def test_convert_non_utf8_does_not_raise(converter: CosenseConverter) -> None:
     assert isinstance(result.text_content, str)
 
 
-def test_markitdown_convert_from_file(
-    markitdown_with_cosense: MarkItDown, tmp_path: Path
-) -> None:
+def test_markitdown_convert_from_file(markitdown: MarkItDown, tmp_path: Path) -> None:
     lines = ["[* File Heading]", "[img https://example.com/logo.png]"]
     path = tmp_path / "note.txt"
     path.write_text("\n".join(lines), encoding="utf-8")
 
-    result = markitdown_with_cosense.convert(path)
+    result = markitdown.convert(path)
     assert "# File Heading" in result.text_content
     assert "![img](https://example.com/logo.png)" in result.text_content
