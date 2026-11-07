@@ -1,6 +1,7 @@
 import init, { convert } from "./pkg/cosense_wasm.js";
+import { mathBlocks } from "./math.js";
 
-const md = window.markdownit({ linkify: true });
+const md = window.markdownit({ linkify: true }).use(mathBlocks);
 
 const input = document.getElementById("input");
 const preview = document.getElementById("preview");
