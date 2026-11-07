@@ -1,6 +1,6 @@
 # Cosense live preview
 
-A static page that converts Cosense to Markdown in the browser and previews it instantly. Conversion runs in wasm (`crates/cosense-wasm`); markdown-it renders the Markdown, DOMPurify sanitizes it, and KaTeX typesets math (`code:tex` → `$$…$$`). Those three load from pinned jsdelivr URLs with **SRI (`integrity="sha384-…"`)**, so the browser rejects any tampered bytes on a hash mismatch.
+A static page that converts Cosense to Markdown in the browser and previews it instantly. Conversion runs in wasm (`crates/cosense-wasm`); markdown-it renders the Markdown, DOMPurify sanitizes it, and KaTeX typesets math (`code:tex` → `$$…$$`). A block rule preserves math source through Markdown rendering, including blank lines and embedded dollar signs. Those three libraries load from pinned jsdelivr URLs with **SRI (`integrity="sha384-…"`)**, so the browser rejects any tampered bytes on a hash mismatch.
 
 ## Build & serve
 
@@ -19,6 +19,8 @@ python3 -m http.server -d web 8000
 ```
 
 `web/pkg/` is generated, so it is not committed (already in `.gitignore`). Re-run step 1 after changing the core.
+
+Run the math parser checks with `node --test web/math.test.mjs` from the repository root. They load the same pinned markdown-it script as the page and verify its SRI hash; network access is required.
 
 ## Third-party libraries
 

@@ -187,9 +187,24 @@
       "expected": ["$$", "see the notes - chapter 2", "$$"]
     },
     {
-      "id": "code_block_keeps_internal_blank_line",
-      "source": ["code:py", " line 1", "", " line 2", "after"],
+      "id": "math_blocks_are_separated_from_surrounding_text",
+      "source": ["before", "code:tex", " x^2", "code:tex", " ", " y^2", "after"],
+      "expected": ["before", "", "$$", "x^2", "$$", "", "$$", "", "y^2", "$$", "", "after"]
+    },
+    {
+      "id": "math_block_in_list_ends_at_empty_line",
+      "source": [" X", "  code:tex", "   x", "", "   -> y"],
+      "expected": ["- X", "", "  $$", "  x", "  $$", "", "  - -> y"]
+    },
+    {
+      "id": "code_block_keeps_indented_blank_line",
+      "source": ["code:py", " line 1", " ", " line 2", "after"],
       "expected": ["```py", "line 1", "", "line 2", "```", "after"]
+    },
+    {
+      "id": "code_block_ends_at_empty_line",
+      "source": ["code:py", " line 1", "", " line 2", "after"],
+      "expected": ["```py", "line 1", "```", "", "- line 2", "", "after"]
     },
     {
       "id": "code_block_ends_on_blank_then_unindented",
@@ -234,7 +249,7 @@
     {
       "id": "list_nested_math_block",
       "source": [" 分散", "  code:tex", "   V(X) = E((X-μ)^2)"],
-      "expected": ["- 分散", "  $$", "  V(X) = E((X-μ)^2)", "  $$"]
+      "expected": ["- 分散", "", "  $$", "  V(X) = E((X-μ)^2)", "  $$"]
     },
     {
       "id": "list_nested_code_two_levels",
@@ -254,9 +269,29 @@
       "expected": ["- a", "  - b", "  - c"]
     },
     {
+      "id": "list_hierarchy_survives_blank_lines",
+      "source": [" 分散", " \t期待値からのズレ", "", " \tサイコロの例", " 次の項目"],
+      "expected": ["- 分散", "  - 期待値からのズレ", "", "  - サイコロの例", "- 次の項目"]
+    },
+    {
+      "id": "list_hierarchy_resets_after_unindented_content",
+      "source": [" parent", "  child", "", "paragraph", "", "  new list"],
+      "expected": ["- parent", "  - child", "", "paragraph", "", "- new list"]
+    },
+    {
+      "id": "unindented_image_ends_list",
+      "source": [" a", "  b", "[https://example.com/x.png]"],
+      "expected": ["- a", "  - b", "", "![](https://example.com/x.png)"]
+    },
+    {
       "id": "table_rendering",
       "source": ["table:Users", " Name\tAge\tCity", " Alice\t30\tTokyo", " Bob\t25\tOsaka"],
       "expected": ["## Users", "", "| Name | Age | City |", "|---|---|---|", "| Alice | 30 | Tokyo |", "| Bob | 25 | Osaka |"]
+    },
+    {
+      "id": "table_ends_before_unindented_text",
+      "source": ["table:T", " a\tb", "text"],
+      "expected": ["## T", "", "| a | b |", "|---|---|", "", "text"]
     },
     {
       "id": "table_without_title",

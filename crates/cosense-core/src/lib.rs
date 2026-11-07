@@ -95,10 +95,16 @@ fn heading(line: &str) -> Option<(usize, String)> {
 fn list(lines: &[Line], start: usize, out: &mut Vec<String>) -> usize {
     let mut ancestors: Vec<usize> = Vec::new();
     let mut i = start;
-    while let Some(line) = lines.get(i)
-        && line.indent > 0
-        && !line.is_blank()
-    {
+    while let Some(line) = lines.get(i) {
+        if line.is_blank() {
+            out.push(String::new());
+            i += 1;
+            continue;
+        }
+        if line.indent == 0 {
+            separate_from_previous(out);
+            break;
+        }
         while ancestors.last().is_some_and(|&d| d >= line.indent) {
             ancestors.pop();
         }
@@ -127,14 +133,18 @@ fn fenced_code(lines: &[Line], start: usize, language: &str, out: &mut Vec<Strin
 fn code_block(lines: &[Line], start: usize, indent: &str, out: &mut Vec<String>) -> usize {
     let directive = &lines[start];
     let descriptor = directive.body[CODE_DIRECTIVE.len()..].trim();
-    let mut end = start + 1;
-    while let Some(offset) = lines[end..].iter().position(|line| !line.is_blank())
-        && lines[end + offset].indent > directive.indent
-    {
-        end += offset + 1;
-    }
+    let rest = &lines[start + 1..];
+    let len = rest
+        .iter()
+        .take_while(|line| line.indent > directive.indent)
+        .count();
+    let len = rest[..len]
+        .iter()
+        .rposition(|line| !line.is_blank())
+        .map_or(0, |last| last + 1);
+    let end = start + 1 + len;
 
-    let body = &lines[start + 1..end];
+    let body = &rest[..len];
     let width = body
         .iter()
         .filter(|line| !line.is_blank())
@@ -150,7 +160,9 @@ fn code_block(lines: &[Line], start: usize, indent: &str, out: &mut Vec<String>)
         .collect();
 
     if descriptor.eq_ignore_ascii_case("tex") {
+        separate_from_previous(out);
         push_block(out, indent, "$$", &body, "$$");
+        separate_from_next(lines, end, out);
     } else {
         let language = descriptor
             .rsplit_once('.')
@@ -179,6 +191,18 @@ fn push_block(out: &mut Vec<String>, indent: &str, open: &str, body: &[&str], cl
     out.push(format!("{indent}{close}"));
 }
 
+fn separate_from_previous(out: &mut Vec<String>) {
+    if out.last().is_some_and(|line| !line.is_empty()) {
+        out.push(String::new());
+    }
+}
+
+fn separate_from_next(lines: &[Line], next: usize, out: &mut Vec<String>) {
+    if lines.get(next).is_some_and(|line| !line.is_blank()) {
+        out.push(String::new());
+    }
+}
+
 fn table(lines: &[Line], start: usize, title: &str, out: &mut Vec<String>) -> Option<usize> {
     let rows: Vec<Vec<&str>> = lines[start + 1..]
         .iter()
@@ -194,7 +218,9 @@ fn table(lines: &[Line], start: usize, title: &str, out: &mut Vec<String>) -> Op
     out.push(table_row(&rows[0], width));
     out.push(format!("|{}", "---|".repeat(width)));
     out.extend(rows[1..].iter().map(|row| table_row(row, width)));
-    Some(start + 1 + rows.len())
+    let end = start + 1 + rows.len();
+    separate_from_next(lines, end, out);
+    Some(end)
 }
 
 fn table_row(cells: &[&str], width: usize) -> String {

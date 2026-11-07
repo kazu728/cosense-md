@@ -14,6 +14,7 @@ Convert [Cosense](https://scrapbox.io/) notation to Markdown. A single Rust conv
 
 ## Development
 
+- Toolchain: `nix develop` provides everything below, including the matching `wasm-bindgen-cli`.
 - Rust core: `cargo test -p cosense-core` (golden `{source, expected}` cases in `tests/conformance.json` + property tests).
 - Python plugin: `uv run pytest` in `markitdown-cosense/` (builds the PyO3 module and rebuilds it when Rust sources change).
 - Web preview: see [`web/README.md`](web/README.md).
