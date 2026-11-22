@@ -15,22 +15,42 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # Linux builds run in maturin-action's default image for each target, pinned by digest
+        # because the action pulls those images by mutable tags.
         platform:
-          - { runner: ubuntu-latest, target: x86_64, manylinux: auto }
-          - { runner: ubuntu-latest, target: aarch64, manylinux: auto }
-          - { runner: ubuntu-latest, target: x86_64, manylinux: musllinux_1_2 }
-          - { runner: ubuntu-latest, target: aarch64, manylinux: musllinux_1_2 }
-          - { runner: macos-latest, target: aarch64, manylinux: auto }
-          - { runner: windows-latest, target: x64, manylinux: auto }
+          - runner: ubuntu-latest
+            target: x86_64
+            manylinux: auto
+            container: quay.io/pypa/manylinux2014_x86_64:2026.11.14-1@sha256:e6a785657009c612fe2a85fa933051d03a50ba62b1c5e47d62abcab546a2e423
+          - runner: ubuntu-latest
+            target: aarch64
+            manylinux: auto
+            container: ghcr.io/rust-cross/manylinux2014-cross:aarch64@sha256:32c92568ebee8db53e0598c21bcd06a6dd1649d45d507646a8a49313c50325f8
+          - runner: ubuntu-latest
+            target: x86_64
+            manylinux: musllinux_1_2
+            container: ghcr.io/rust-cross/rust-musl-cross:x86_64-musl@sha256:3f1010eb48311dfde5d51f011163451940af34bd317355c4a8652ce6b4b61051
+          - runner: ubuntu-latest
+            target: aarch64
+            manylinux: musllinux_1_2
+            container: ghcr.io/rust-cross/rust-musl-cross:aarch64-musl@sha256:02e790506c5f15a533bc05b3af8719b16a8a2314480f6f0fdc0166432035d9b4
+          - runner: macos-latest
+            target: aarch64
+            manylinux: auto
+          - runner: windows-latest
+            target: x64
+            manylinux: auto
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: PyO3/maturin-action@v1.51.0
         with:
           working-directory: markitdown-cosense
+          maturin-version: v1.16.0
           target: ${{ matrix.platform.target }}
           args: --release --out dist
           sccache: "true"
           manylinux: ${{ matrix.platform.manylinux }}
+          container: ${{ matrix.platform.container }}
       - uses: actions/upload-artifact@v7.0.2
         with:
           name: wheels-${{ matrix.platform.runner }}-${{ matrix.platform.target }}-${{ matrix.platform.manylinux }}
@@ -62,6 +82,7 @@ jobs:
       - uses: PyO3/maturin-action@v1.51.0
         with:
           working-directory: markitdown-cosense
+          maturin-version: v1.16.0
           command: sdist
           args: --out dist
       - uses: actions/upload-artifact@v7.0.2
